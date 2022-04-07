@@ -18,6 +18,9 @@ CFLAGS += $(INC)
 
 # Linking flags
 
+OPENCV = `pkg-config opencv4 --cflags --libs`
+LDFLAGS = $(OPENCV)
+
 # File which contains the main function
 MAINFILE := main.cpp
 
@@ -34,36 +37,38 @@ DEPS := $(patsubst %.o, %.d, $(ALL_OBJS))
 
 # Link the main program
 main: base $(OBJ_DIR)/$(MAINOBJ)
-    $(CC_CPP) $(CPPFLAGS) -o $(OUTNAME) $(CPP_OBJS) $(C_OBJS) $(OBJ_DIR)/$(MAINOBJ) $(LDFLAGS)
+	$(CC_CPP) $(CPPFLAGS) -o $(OUTNAME) $(CPP_OBJS) $(C_OBJS) $(OBJ_DIR)/$(MAINOBJ) $(LDFLAGS)
 
 # Compile everything except mainfile
 base: $(OBJ_DIR) $(CPP_OBJS) $(C_OBJS) Makefile
 
 # Compile C++ objects
 $(CPP_OBJS) $(OBJ_DIR)/$(MAINOBJ): $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-    $(CC_CPP) $(CPPFLAGS) -c $< -o $@
+	$(CC_CPP) $(CPPFLAGS) -c $< -o $@
 
 # Compile C objects
 $(C_OBJS): $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-    $(CC_C) $(CFLAGS) -c $< -o $@
+	$(CC_C) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR):
-    @ mkdir -p $(OBJ_DIR)
+	@ mkdir -p $(OBJ_DIR)
 
 # Run output file (and compile it if needed)
 run: main
-    @ ./$(OUTNAME)
+	@ ./$(OUTNAME)
 
 run-leaktest: main
-    @ valgrind --leak-check=full ./$(OUTNAME)
+	@ valgrind --leak-check=full ./$(OUTNAME)
 
 # 'make clean' removes object files and memory dumps.
 clean:
-    @ \rm -rf $(OBJ_DIR) *.gch core
+	@ \rm -rf $(OBJ_DIR) *.gch core
 
 # 'make zap' also removes the executable and backup files.
 zap: clean
-    @ \rm -rf $(OUTNAME) *~
+	@ \rm -rf $(OUTNAME) *~
+
+timeit: main
+	@time ./main
 
 -include $(DEPS)
-
