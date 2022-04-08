@@ -7,7 +7,7 @@ CC_CPP = g++
 CC_C = gcc
 
 # Other include directories with headers
-INC := -Icommon
+INC := -I/usr/local/include/opencv4/
 
 # Compiling flags
 CPPFLAGS += -Wno-deprecated-declarations -Wall -Wextra -pedantic -Weffc++ -Wold-style-cast -Woverloaded-virtual -fmax-errors=3 -g
@@ -18,7 +18,8 @@ CFLAGS += $(INC)
 
 # Linking flags
 
-OPENCV = `pkg-config opencv4 --cflags --libs`
+#OPENCV = `pkg-config opencv4 --cflags --libs` -lopencv_core -lopencv_video
+OPENCV = -lopencv_core -lopencv_video -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio -lopencv_highgui
 LDFLAGS = $(OPENCV)
 
 # File which contains the main function
