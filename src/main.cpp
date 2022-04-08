@@ -2,6 +2,8 @@
 #include <vector>
 #include <cmath>
 #include <opencv2/opencv.hpp>
+#include <opencv2/videoio.hpp>
+
 
 using namespace std;
 
@@ -153,6 +155,8 @@ void classify_lines(vector<cv::Vec2f> lines, vector<cv::Vec2f> &side_lines, vect
     return;
 }
 
+
+
 cv::Mat perspective_transform(cv::Mat image) {
     cv::Point2f pts1[4];
     pts1[0] = cv::Point2f(240.0f, 50.0f);
@@ -176,13 +180,11 @@ cv::Mat perspective_transform(cv::Mat image) {
     return ipm;
 }
 
-void kalman(float P_previous, float &P, float x_model_previous, float &x_model,  float z, float R=15) {
-    float K = P_previous / (P_previous+R);
-    x_model = x_model_previous + K*(z-x_model_previous);
-    P = (1-K)*P_previous;
-    return;
+void kalman(float &P, int &x_model, int z, int R=15) {
+    float K = P / (P+R);
+    x_model = x_model + K*(z-x_model);
+    P = (1-K)*P;
 }
-
 
 // ### Image processing code
 int add_vote(cv::Vec2f line1, cv::Vec2f line2) {return line1[2] + line2[2];}
@@ -202,6 +204,15 @@ float average_rho(vector<cv::Vec2f> lines) {
     }
     return sum/lines.size();
 }
+
+float average_circle_coord(vector<cv::Vec3f> lines, int position) {
+    float sum = 0;
+    for (unsigned int i=0; i<lines.size(); i++) {
+        sum += lines[i][position];
+    }
+    return sum/lines.size();
+}
+
 
 float average_theta(vector<cv::Vec2f> lines) {
     float x=0, y=0;
@@ -223,6 +234,20 @@ cv::Vec2f average_line(vector<cv::Vec2f> lines) {
     line[0] = line[0]/lines.size();
     line[1] = atan2(y, x);
     return line;
+}
+
+cv::Vec3f average_circle(vector<cv::Vec3f> circles) {
+    cv::Vec3f circle;
+    int size = circles.size();
+    for (unsigned int i=0; i<circles.size(); i++) {
+        circle[0] += circles[i][0] ; //x
+        circle[1] += circles[i][1] ; //y
+        circle[2] += circles[i][2] ; //r
+    }
+    circle[0] = circle[0]/size;
+    circle[1] = circle[1]/size;
+    circle[2] = circle[2]/size;
+    return circle;
 }
 
 vector<cv::Vec2f> get_unique_lines(vector<cv::Vec2f> lines, int theta_margin=10, int rho_margin=60) {
@@ -274,6 +299,46 @@ vector<cv::Vec2f> get_unique_lines(vector<cv::Vec2f> lines, int theta_margin=10,
     return unique_lines;
 }
 
+vector<cv::Vec3f> get_unique_circles(vector<cv::Vec3f> circles) {
+    // Group similar circles
+    vector<vector<cv::Vec3f>> circle_clusters;
+    vector<cv::Vec3f> circle;
+    circle.push_back(circles[0]);
+    circle_clusters.push_back(circle);
+    bool sim = false;
+
+    for (unsigned int i=0; i<circles.size(); i++) {
+        sim = false;
+        for (unsigned int j=0; j<circle_clusters.size(); j++) {
+            float delta_x = average_circle_coord(circle_clusters[j], 0);
+            float delta_y = average_circle_coord(circle_clusters[j], 1);
+            float delta_r = average_circle_coord(circle_clusters[j], 2);
+
+            delta_x = abs(delta_x - circles[i][0]);
+            delta_y = abs(delta_y - circles[i][1]);
+            delta_r = abs(delta_r - circles[i][2]);
+
+            if (delta_x < 50 && delta_y < 50 &&  delta_r < 50) {
+                circle_clusters[j].push_back(circles[i]);
+                sim = true;
+                break;
+            }
+        } 
+        if (sim == false) {
+            vector<cv::Vec3f> circle;
+            circle.push_back(circles[i]);
+            circle_clusters.push_back(circle);
+        }
+    }
+    // Merge similar lines by averaging
+    vector<cv::Vec3f> unique_circles;
+    for (unsigned int i=0; i<circle_clusters.size(); i++) {
+        cv::Vec3f averaged_circle = average_circle(circle_clusters[i]);
+        unique_circles.push_back(averaged_circle);
+    }
+    return unique_circles;
+}
+
 // ### Position calculation
 int get_lateral_position(vector<cv::Vec2f> side_lines, int image_w=710, int image_h=550) {
     sort(side_lines.begin(), side_lines.end(), comp_rho);
@@ -309,18 +374,18 @@ int get_stop_line_distance(cv::Vec2f stop_line, int image_w=710, int image_h=550
     return image_h*sin(theta) + image_w/2*cos(theta) - rho;
 }
 
-// ### Main
-void process(const char* default_file = "./Reference/Left_turn.png") {
+int image_process(cv::Mat imput_image, cv::Mat &output_image, int &lateral_position, int &stop_distance) {
     cv::Mat edges, cdst, gauss;
     vector<cv::Vec2f> lines, side_lines, stop_lines;
+    vector<cv::Vec3f> circles;  
+    vector<cv::Vec3f> filted_circles;    
+  
     // vector<cv::Vec2f> circles;
     // const char* filename = argc >=2 ? argv[1] : default_file;
 
 //     output_prefix = "Output\\" + source_file.split("\\")[1][:-4]
-    cv::Mat src = cv::imread( cv::samples::findFile(default_file ), cv::IMREAD_GRAYSCALE);
-    cv::Mat out = cv::imread( cv::samples::findFile(default_file ));
-    cv::Mat ipm = perspective_transform(src);
-    out = perspective_transform(out);
+    // cv::Mat out = cv::imread( cv::samples::findFile(default_file ));
+    cv::Mat ipm = perspective_transform(imput_image);
 
     // cv::Mat out = ipm.clone();
     cv::GaussianBlur(ipm, gauss, cv::Size(3, 3), 0, 0 );
@@ -329,45 +394,47 @@ void process(const char* default_file = "./Reference/Left_turn.png") {
     lines = get_unique_lines(lines, 10, 58);
     classify_lines(lines, side_lines, stop_lines);
     if (side_lines.size() >= 2) {
-        cout<<"l_lat: "<< get_lateral_position(side_lines)<<endl;
+        lateral_position = get_lateral_position(side_lines);
+        cout<<"l_lat: "<< lateral_position<<endl;
+    } else {
+        return -1;
     }
-    
-    // vector<cv::Vec3f>circles = hough_transform_circles(edges);
-    // circles = [circle for circle in circles if not circle_between_lines(side_lines[0], side_lines[1], circle)]
-    out = print_lines_on_image(lines, out, cv::Scalar(255, 100, 15));
-    // final_img = print_lines_on_image(lines, final_img, color=(0, 0, 255))
-    // final_img = print_circles_on_image(circles, final_img)
+    cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
+                 edges.rows/16,  // Distance between unique circles
+                 100, 30, 1, 30 // canny, center, min_r, max_r
+    );
+    for (unsigned int i=0; i<circles.size(); i++) {
+        if (not circle_between_lines(side_lines[0], side_lines[1], circles[i])) {
+            filted_circles.push_back(circles[i]);
+        }
+    }
+    output_image = print_lines_on_image(lines, ipm, cv::Scalar(255, 100, 15));
+    output_image = print_circles_on_image(circles, output_image);
     if (stop_lines.size() != 0) {
-        out = print_lines_on_image(stop_lines, out, cv::Scalar(0, 255, 0));
-        // cout<<"l_s: "<<get_stop_line_distance(stop_lines[0])<<endl;
-        get_stop_line_distance(stop_lines[0]);
+        output_image = print_lines_on_image(stop_lines, output_image, cv::Scalar(0, 255, 0));
+        stop_distance = get_stop_line_distance(stop_lines[0]);
+        // cout<<"l_s: "<<stop_distance<<endl;
+
     }
+    return 1;
+}
 
-    // cv2.imwrite(output_prefix + "_hough" + output_suffix, final_img)
 
+void process(const char* default_file = "./Reference/Left_turn.png") {
+    cv::Mat src = cv::imread( cv::samples::findFile(default_file ), cv::IMREAD_GRAYSCALE);
+    int lateral_position;
+    int stop_distance;
+    cv::Mat out;
 
+    image_process(src, out, lateral_position, stop_distance);
     cv::imwrite("cc.png", out);
-
-
-
-//     final_img = ipm.copy()
-//     circles = hough_transform_circles(canny)
-//     circles = [circle for circle in circles if not circle_between_lines(side_lines[0], side_lines[1], circle)]
-
-//     final_img = print_lines_on_image(lines, final_img, color=(0, 0, 255))
-//     final_img = print_circles_on_image(circles, final_img)
-//     if len(stop_lines) != 0:
-//         final_img = print_lines_on_image(stop_lines, final_img, color=(255, 0, 0))
-//         print("l_s: ", get_stop_line_distance(stop_lines[0]))
-
-//     cv2.imwrite(output_prefix + "_hough" + output_suffix, final_img)
-
-//     # image = probabilistic_hough_transform_opencv(ipm, canny)
-//     # cv2.imwrite(output_prefix + "_probabilisk" + output_suffix, image)
 }
 
 void camera() {
-    cv::Mat edges, cdst, gauss;
+    int lateral_mesument;
+    int stop_distance;
+    cv::Mat out;
+
     vector<cv::Vec2f> lines, side_lines, stop_lines;
 
     cv::Mat frame;
@@ -385,50 +452,93 @@ void camera() {
         cerr << "ERROR! Unable to open camera\n";
         return;
     }
-    // int P = 10;
-    // int lateral_model = 150;
-    // vector<int> mesuments;
-    // vector<int> kalman_values;
-    // int Q = 10  // Process noise, R=measurement moise
-    // int P2 = 10;
-    // int lateral_model2 = 150;
-    // int Q2 = 10;  // Process noise, R=measurement moise
-    // vector<int> mesuments2;
-    // vector<int> kalman_values2;
+
+    int R = 15; //Measurement moise 
+    int Q = 10; // Process noise
+    float P = 10; 
+    int lateral_model = 100;
+    int pre_mesument;
+    int mesument_diff;
+    bool is_down;
+    bool is_up;
 
     for (;;) {
         cap.read(frame);
-        cv::Mat ipm = perspective_transform(frame);
-        cv::Mat out = perspective_transform(frame);
-
-        // cv::Mat out = ipm.clone();
-        cv::GaussianBlur(ipm, gauss, cv::Size( 7, 7), 0, 0 );
-        cv::Canny(gauss, edges, 50, 200, 3);
-        cv::HoughLines(edges, lines, 1, CV_PI/180, 80, 0, 0 );
-        lines = get_unique_lines(lines, 10, 58);
-        classify_lines(lines, side_lines, stop_lines);
-        if (side_lines.size() >= 2) {
-            // cout<<"l_lat: "<< get_lateral_position(side_lines)<<endl;
-            get_lateral_position(side_lines);
-
-            out = print_lines_on_image(stop_lines, out, cv::Scalar(255, 100, 15));
-
+        pre_mesument = lateral_mesument;
+        int found_sidelines = image_process(frame, out, lateral_mesument, stop_distance);
+        if (found_sidelines == 1) {
+            lateral_mesument = get_lateral_position(side_lines);
+            mesument_diff = lateral_mesument - pre_mesument;
+            if (is_down) {
+                if (mesument_diff  > 100) {
+                    is_down = false;
+                } else {
+                    lateral_mesument += mesument_diff;   
+                }
+            } else if (is_up) {
+                if (mesument_diff  < 100) {
+                    is_up = false;
+                } else {
+                    lateral_mesument += mesument_diff;
+                }
+            } else if (mesument_diff < -100) {
+                is_down = true;
+                break;
+                
+            } else if(mesument_diff > 100) {
+                is_up=true;
+                break;
+            } else {
+                cout<<"something wrong with prefilter"<<endl;
+            }
+            kalman(P, lateral_model, lateral_mesument, R);
+            P = P + Q;            
         }
-        out = print_lines_on_image(side_lines, out, cv::Scalar(255, 100, 15));
-
         cv::imshow("frame", out);
-        // if (cv::waitKey(10) > 0) break;
+        if (cv::waitKey(10) > 0) break;
     }
-    // cap.release();
-    // cv::destroyAllWindows();
+    cap.release();
+    cv::destroyAllWindows();
 }
 
-int main() {
-    // camera();
-    for (int i=0; i<50; i++) {
-        process();
+void video() {
+    cv::Mat edges, cdst, gauss;
+    vector<cv::Vec2f> lines, side_lines, stop_lines;
+    cv::Mat out;
+    int lateral_position;
+    int stop_distance;
 
+    // string filename = "./Reference/road_sample.mp4";
+    // cv::VideoCapture cap(filename);
+    cv::VideoCapture cap("./Reference/road_sample.mp4", cv::CAP_ANY,
+      { cv::CAP_PROP_HW_ACCELERATION, cv::VIDEO_ACCELERATION_ANY });
+
+    cout<<cv::getBuildInformation()<<endl;
+
+    if(!cap.isOpened()){
+        cout << "Error opening video stream or file" << endl;
+        return;
     }
+    while(1) {
+        cv::Mat frame;
+        cap >> frame;
+        // if (frame.empty())
+        //     break;
+        image_process(frame, out, lateral_position, stop_distance);
+
+        imshow( "Frame", out );
+    }
+}
+
+
+// ### Main
+int main() {
+    camera();
+    // for (int i=0; i<50; i++) {
+    //     process();
+
+    // }
+    // video();
 //     # process("Reference\\Left_turn.png")
 //     # process("Reference\\Right_turn.png")
 //     # process("Reference\\three_way_1.png")
