@@ -69,10 +69,9 @@ float angle_difference(float angle_1, float angle_2) {
 float circle_line_dist(cv::Vec3f circle, cv::Vec2f line) {
     float rho = line[0];
     float theta = line[1];
-    
-    float x = cvRound(circle[0]);
-    float y = cvRound(circle[1]);
-    float r = cvRound(circle[2]);
+    int x = cvRound(circle[0]);
+    int y = cvRound(circle[1]);
+    int r = cvRound(circle[2]);
 
     float dist = abs(x*cos(theta) + y*sin(theta) + rho) - r;
 
@@ -251,11 +250,14 @@ cv::Vec3f average_circle(vector<cv::Vec3f> circles) {
 }
 
 vector<cv::Vec2f> get_unique_lines(vector<cv::Vec2f> lines, int theta_margin=10, int rho_margin=60) {
+    if (lines.size() <= 1) {
+        return lines;
+    }
     lines = remove_negative_rho(lines);
-
-    // Group similar lines
     vector<vector<cv::Vec2f>> line_clusters;
     vector<cv::Vec2f> line;
+
+    // Group similar lines
     line.push_back(lines[0]);
     line_clusters.push_back(line);
     bool sim = false;
@@ -274,26 +276,16 @@ vector<cv::Vec2f> get_unique_lines(vector<cv::Vec2f> lines, int theta_margin=10,
             }
         } 
         if (sim == false) {
-
             vector<cv::Vec2f> line;
             line.push_back(lines[i]);
             line_clusters.push_back(line);
         }
     }
-    // cout<<line_clusters[0].size()<<endl;
-    // for (unsigned int i=0; i<line_clusters.size(); i++) {
-    //     cout<<line_clusters[i].size()<<endl;
-    //     for (unsigned int j=0; j<line_clusters[i].size(); j++) {
-    //         cout<<line_clusters[i][j]<<endl;
-
-    //     }
-    // }
 
     // Merge similar lines by averaging
     vector<cv::Vec2f> unique_lines;
     for (unsigned int i=0; i<line_clusters.size(); i++) {
         cv::Vec2f averaged_line = average_line(line_clusters[i]);
-        // int total_votes = sum_votes(line_clusters[i]);
         unique_lines.push_back(averaged_line);
     }
     return unique_lines;
@@ -340,30 +332,32 @@ vector<cv::Vec3f> get_unique_circles(vector<cv::Vec3f> circles) {
 }
 
 // ### Position calculation
-int get_lateral_position(vector<cv::Vec2f> side_lines, int image_w=710, int image_h=550) {
+float get_lateral_position(vector<cv::Vec2f> side_lines, int image_w=710, int image_h=550) {
     sort(side_lines.begin(), side_lines.end(), comp_rho);
-    int rho_l = side_lines[0][0];
+    float rho_l = side_lines[0][0];
     float theta_l = side_lines[0][1];
-    int rho_r = side_lines[1][0];
+    float rho_r = side_lines[1][0];
     float theta_r = side_lines[1][1];
 
     // cout<<"rho_l: " << rho_l << "\ttheta_l: " << theta_l;
     // cout<<"rho_r: " << rho_r << "\ttheta_r: " <<theta_r;
 
-    int x_l = (rho_l - image_h*sin(theta_l)) / cos(theta_l);
-    int x_r = (rho_r - image_h*sin(theta_r)) / cos(theta_r);
+    float x_l = (rho_l - image_h*sin(theta_l)) / cos(theta_l);
+    float x_r = (rho_r - image_h*sin(theta_r)) / cos(theta_r);
     // cout<< "x_l: " << x_l << "\tx_r: " << x_r;
 
-    int b_v = x_r - x_l;
-    int b_vl = image_w/2 - x_l;
-    int b_vr = x_r - image_w/2;
+    float b_v = x_r - x_l;
+    float b_vl = image_w/2 - x_l;
+    float b_vr = x_r - image_w/2;
     // cout<<"b_vl: " << b_vl << "\tb_vr: " << b_vr;
+
+    int lat = 1/2 * (b_vr*cos(theta_r) + b_v - b_vl*cos(theta_l));
 
     cout<<"deviation: "<< (theta_l+theta_r)/2<<
           "\nl_lat left: " << b_v - b_vl*cos(theta_l)<<
           "\tl_lat right: " << b_vr*cos(theta_r);
 
-    return 1/2 * (b_vr*cos(theta_r) + b_v - b_vl*cos(theta_l));
+    return lat;
 }
 
 int get_stop_line_distance(cv::Vec2f stop_line, int image_w=710, int image_h=550) {
@@ -375,31 +369,27 @@ int get_stop_line_distance(cv::Vec2f stop_line, int image_w=710, int image_h=550
 }
 
 int image_process(cv::Mat imput_image, cv::Mat &output_image, int &lateral_position, int &stop_distance) {
-    cv::Mat edges, cdst, gauss;
+    cv::Mat edges, gray, gauss;
     vector<cv::Vec2f> lines, side_lines, stop_lines;
     vector<cv::Vec3f> circles;  
     vector<cv::Vec3f> filted_circles;    
   
-    // vector<cv::Vec2f> circles;
-    // const char* filename = argc >=2 ? argv[1] : default_file;
-
-//     output_prefix = "Output\\" + source_file.split("\\")[1][:-4]
-    // cv::Mat out = cv::imread( cv::samples::findFile(default_file ));
-    cv::Mat ipm = perspective_transform(imput_image);
-
-    // cv::Mat out = ipm.clone();
+    // cv::Mat ipm = perspective_transform(imput_image);
+    cv::Mat ipm = imput_image.clone();
+    cv::cvtColor(ipm, gray, cv::COLOR_RGB2GRAY);
     cv::GaussianBlur(ipm, gauss, cv::Size(3, 3), 0, 0 );
     cv::Canny(gauss, edges, 50, 200, 3);
     cv::HoughLines(edges, lines, 1, CV_PI/180, 80, 0, 0 );
     lines = get_unique_lines(lines, 10, 58);
     classify_lines(lines, side_lines, stop_lines);
     if (side_lines.size() >= 2) {
-        lateral_position = get_lateral_position(side_lines);
-        cout<<"l_lat: "<< lateral_position<<endl;
+
+        lateral_position = get_lateral_position(side_lines, imput_image.size().width, imput_image.size().height);
+        cout<<"l_lat: "<<lateral_position<<endl;
     } else {
-        return -1;
+        lateral_position = -1000;
     }
-    cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
+    /*cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
                  edges.rows/16,  // Distance between unique circles
                  100, 30, 1, 30 // canny, center, min_r, max_r
     );
@@ -407,9 +397,9 @@ int image_process(cv::Mat imput_image, cv::Mat &output_image, int &lateral_posit
         if (not circle_between_lines(side_lines[0], side_lines[1], circles[i])) {
             filted_circles.push_back(circles[i]);
         }
-    }
-    output_image = print_lines_on_image(lines, ipm, cv::Scalar(255, 100, 15));
-    output_image = print_circles_on_image(circles, output_image);
+    }*/
+    output_image = print_lines_on_image(lines, gray, cv::Scalar(255, 100, 15));
+   // output_image = print_circles_on_image(circles, output_image);
     if (stop_lines.size() != 0) {
         output_image = print_lines_on_image(stop_lines, output_image, cv::Scalar(0, 255, 0));
         stop_distance = get_stop_line_distance(stop_lines[0]);
@@ -427,7 +417,7 @@ void process(const char* default_file = "./Reference/Left_turn.png") {
     cv::Mat out;
 
     image_process(src, out, lateral_position, stop_distance);
-    cv::imwrite("cc.png", out);
+    //cv::imwrite("cc.png", out);
 }
 
 void camera() {
@@ -439,13 +429,11 @@ void camera() {
 
     cv::Mat frame;
     //--- INITIALIZE VIDEOCAPTURE
-    cv::VideoCapture cap(0);
-    cap.set(3, 180);
-    cap.set(4, 100);
-    cap.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
-    
-    // open the default camera using default API
-    // cap.open(1);
+    cv::VideoCapture cap(cv::CAP_ANY);
+
+    //cap.set(3, 180);
+    //cap.set(4, 100);
+    //cap.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
 
     // check if we succeeded
     if (!cap.isOpened()) {
@@ -459,16 +447,21 @@ void camera() {
     int lateral_model = 100;
     int pre_mesument;
     int mesument_diff;
-    bool is_down;
-    bool is_up;
+    bool is_down = false;
+    bool is_up = false;
 
     for (;;) {
-        cap.read(frame);
+        //cap>> frame;
+        //cap.read(frame);
+        cap.grab();
+        cap.retrieve(frame);
         pre_mesument = lateral_mesument;
         int found_sidelines = image_process(frame, out, lateral_mesument, stop_distance);
+        cv::imshow("frame", out);
+        // cout<<found_sidelines<<endl;
         if (found_sidelines == 1) {
-            lateral_mesument = get_lateral_position(side_lines);
             mesument_diff = lateral_mesument - pre_mesument;
+            // cout<<mesument_diff<<endl;
             if (is_down) {
                 if (mesument_diff  > 100) {
                     is_down = false;
@@ -483,18 +476,17 @@ void camera() {
                 }
             } else if (mesument_diff < -100) {
                 is_down = true;
-                break;
                 
             } else if(mesument_diff > 100) {
-                is_up=true;
-                break;
+                is_up = true;
             } else {
-                cout<<"something wrong with prefilter"<<endl;
+                cout<<"something wrong with prefilter/n";
             }
-            kalman(P, lateral_model, lateral_mesument, R);
-            P = P + Q;            
+        } else {
+            cout<<"No sidelines/n";
         }
-        cv::imshow("frame", out);
+            // kalman(P, lateral_model, lateral_mesument, R);
+            // P = P + Q;            
         if (cv::waitKey(10) > 0) break;
     }
     cap.release();
@@ -522,24 +514,25 @@ void video() {
     while(1) {
         cv::Mat frame;
         cap >> frame;
-        // if (frame.empty())
-        //     break;
+        if (frame.empty())
+            break;
         image_process(frame, out, lateral_position, stop_distance);
 
-        imshow( "Frame", out );
+        //imshow( "Frame", out );
+
     }
 }
 
 
 // ### Main
 int main() {
-    camera();
-    // for (int i=0; i<50; i++) {
-    //     process();
 
-    // }
+    camera();
+    // for (int i=0; i<1000; i++) {
+    //    process();
+
+    //  }
     // video();
-//     # process("Reference\\Left_turn.png")
 //     # process("Reference\\Right_turn.png")
 //     # process("Reference\\three_way_1.png")
 //     process("Reference\\three_way_2.png")
