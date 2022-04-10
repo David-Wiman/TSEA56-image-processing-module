@@ -43,7 +43,7 @@ cv::Mat print_circles_on_image(vector<cv::Vec3f> circles, cv::Mat image) {
         cv::Point cp;
         cp.x = cvRound(circles[i][0]);
         cp.y = cvRound(circles[i][1]);
-        cv::circle(image, cp, round(circles[i][2]), CV_RGB(0,0,255), 5);
+        cv::circle(image, cp, cvRound(circles[i][2]), CV_RGB(0,0,255), 5);
     }
     return image;
 }
@@ -188,7 +188,7 @@ void kalman(float &P, int &x_model, int z, int R=15) {
 // ### Image processing code
 int add_vote(cv::Vec2f line1, cv::Vec2f line2) {return line1[2] + line2[2];}
 
-float sum_votes(vector<cv::Vec2f> lines) {
+int sum_votes(vector<cv::Vec2f> lines) {
     int sum = 0;
     for (unsigned int i=0; i<lines.size(); i++) {
         sum += lines[i][2];
@@ -265,7 +265,7 @@ vector<cv::Vec2f> get_unique_lines(vector<cv::Vec2f> lines, int theta_margin=10,
     for (unsigned int i=0; i<lines.size(); i++) {
         sim = false;
         for (unsigned int j=0; j<line_clusters.size(); j++) {
-            int delta_rho = average_rho(line_clusters[j]);
+            float delta_rho = average_rho(line_clusters[j]);
             float delta_theta = average_theta(line_clusters[j]);
             delta_rho = abs(delta_rho - lines[i][0]);
             delta_theta = angle_difference(delta_theta, lines[i][1]);
@@ -276,7 +276,7 @@ vector<cv::Vec2f> get_unique_lines(vector<cv::Vec2f> lines, int theta_margin=10,
             }
         } 
         if (sim == false) {
-            vector<cv::Vec2f> line;
+            // vector<cv::Vec2f> line;
             line.push_back(lines[i]);
             line_clusters.push_back(line);
         }
@@ -317,7 +317,7 @@ vector<cv::Vec3f> get_unique_circles(vector<cv::Vec3f> circles) {
             }
         } 
         if (sim == false) {
-            vector<cv::Vec3f> circle;
+            // vector<cv::Vec3f> circle;
             circle.push_back(circles[i]);
             circle_clusters.push_back(circle);
         }
@@ -362,7 +362,7 @@ float get_lateral_position(vector<cv::Vec2f> side_lines, int image_w=710, int im
 
 int get_stop_line_distance(cv::Vec2f stop_line, int image_w=710, int image_h=550) {
     float theta;
-    int rho;
+    float rho;
     rho = stop_line[0];
     theta = stop_line[1];
     return image_h*sin(theta) + image_w/2*cos(theta) - rho;
