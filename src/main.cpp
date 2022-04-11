@@ -48,14 +48,13 @@ cv::Mat print_circles_on_image(vector<cv::Vec3f> circles, cv::Mat image) {
     return image;
 }
 
-
 bool comp_rho(cv::Vec2f line1, cv::Vec2f line2) {
     return line1[0] > line2[0];
 }
+
 bool comp_rho_rev(cv::Vec2f line1, cv::Vec2f line2) {
     return line1[0] < line2[0];
 }
-
 
 float angle_difference(float angle_1, float angle_2) {
     float diff = abs(angle_1 - angle_2);  //be aware about mod in c++
@@ -85,12 +84,12 @@ bool circle_between_lines(cv::Vec2f line1, cv::Vec2f line2, cv::Vec3f circle) {
         rho_l =  line1[0];
         theta_l = line1[1];
         rho_r =  line2[0];
-        theta_r = line2[1];        
+        theta_r = line2[1];
     } else {
         rho_l =  line2[0];
         theta_l = line2[1];
         rho_r =  line1[0];
-        theta_r = line1[1];        
+        theta_r = line1[1];
     }
     float theta = ((theta_l + theta_r)) / 2;
     float x = circle[0];
@@ -140,7 +139,7 @@ void classify_lines(vector<cv::Vec2f> lines, vector<cv::Vec2f> &side_lines, vect
             }
         }
         side_lines = tmp_lines;
-    //  Add stop_lines that are perpendicular to side_line and closest to button.
+        //  Add stop_lines that are perpendicular to side_line and closest to button.
         if (side_lines.size() >= 1) {
             sort(lines.begin(), lines.end(), comp_rho);
             for (unsigned int i=0; i<lines.size(); i++) {
@@ -149,7 +148,7 @@ void classify_lines(vector<cv::Vec2f> lines, vector<cv::Vec2f> &side_lines, vect
                     return;
                 }
             }
-        } 
+        }
     }
     return;
 }
@@ -274,7 +273,7 @@ vector<cv::Vec2f> get_unique_lines(vector<cv::Vec2f> lines, int theta_margin=10,
                 sim = true;
                 break;
             }
-        } 
+        }
         if (sim == false) {
             // vector<cv::Vec2f> line;
             line.push_back(lines[i]);
@@ -315,7 +314,7 @@ vector<cv::Vec3f> get_unique_circles(vector<cv::Vec3f> circles) {
                 sim = true;
                 break;
             }
-        } 
+        }
         if (sim == false) {
             // vector<cv::Vec3f> circle;
             circle.push_back(circles[i]);
@@ -368,43 +367,39 @@ int get_stop_line_distance(cv::Vec2f stop_line, int image_w=710, int image_h=550
     return image_h*sin(theta) + image_w/2*cos(theta) - rho;
 }
 
+// XXX Här kallar du det lateral_position, ibland lateral_measurement. Är det
+// medvetet? Om du menar samma sak är det bättre att vara konsikvent
+
 int image_process(cv::Mat imput_image, cv::Mat &output_image, int &lateral_position, int &stop_distance) {
+    vector<cv::Vec3f> circles;
+    vector<cv::Vec3f> filted_circles;
+
+    cv::Mat ipm = imput_image.clone();  // XXX Why cloning? Very expensive
+
+    // Pre process
     cv::Mat edges, gray, gauss;
-    vector<cv::Vec2f> lines, side_lines, stop_lines;
-    vector<cv::Vec3f> circles;  
-    vector<cv::Vec3f> filted_circles;    
-  
-    // cv::Mat ipm = perspective_transform(imput_image);
-    cv::Mat ipm = imput_image.clone();
     cv::cvtColor(ipm, gray, cv::COLOR_RGB2GRAY);
-    cv::GaussianBlur(ipm, gauss, cv::Size(3, 3), 0, 0 );
+    cv::GaussianBlur(ipm, gauss, cv::Size(3, 3), 0, 0);
     cv::Canny(gauss, edges, 50, 200, 3);
+
+    vector<cv::Vec2f> lines;
     cv::HoughLines(edges, lines, 1, CV_PI/180, 80, 0, 0 );
+
+    // Post process
     lines = get_unique_lines(lines, 10, 58);
+    vector<cv::Vec2f> side_lines, stop_lines;
     classify_lines(lines, side_lines, stop_lines);
     if (side_lines.size() >= 2) {
-
         lateral_position = get_lateral_position(side_lines, imput_image.size().width, imput_image.size().height);
-        cout<<"l_lat: "<<lateral_position<<endl;
+        cout << "l_lat: " << lateral_position << endl;
     } else {
         lateral_position = -1000;
     }
-    /*cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
-                 edges.rows/16,  // Distance between unique circles
-                 100, 30, 1, 30 // canny, center, min_r, max_r
-    );
-    for (unsigned int i=0; i<circles.size(); i++) {
-        if (not circle_between_lines(side_lines[0], side_lines[1], circles[i])) {
-            filted_circles.push_back(circles[i]);
-        }
-    }*/
+
     output_image = print_lines_on_image(lines, gray, cv::Scalar(255, 100, 15));
-   // output_image = print_circles_on_image(circles, output_image);
     if (stop_lines.size() != 0) {
         output_image = print_lines_on_image(stop_lines, output_image, cv::Scalar(0, 255, 0));
         stop_distance = get_stop_line_distance(stop_lines[0]);
-        // cout<<"l_s: "<<stop_distance<<endl;
-
     }
     return 1;
 }
@@ -417,7 +412,6 @@ void process(const char* default_file = "./Reference/Left_turn.png") {
     cv::Mat out;
 
     image_process(src, out, lateral_position, stop_distance);
-    //cv::imwrite("cc.png", out);
 }
 
 void camera() {
@@ -431,19 +425,15 @@ void camera() {
     //--- INITIALIZE VIDEOCAPTURE
     cv::VideoCapture cap(cv::CAP_ANY);
 
-    //cap.set(3, 180);
-    //cap.set(4, 100);
-    //cap.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
-
     // check if we succeeded
     if (!cap.isOpened()) {
         cerr << "ERROR! Unable to open camera\n";
         return;
     }
 
-    int R = 15; //Measurement moise 
+    int R = 15; // Measurement moise
     int Q = 10; // Process noise
-    float P = 10; 
+    float P = 10;
     int lateral_model = 100;
     int pre_mesument;
     int mesument_diff;
@@ -451,22 +441,18 @@ void camera() {
     bool is_up = false;
 
     for (;;) {
-        //cap>> frame;
-        //cap.read(frame);
         cap.grab();
         cap.retrieve(frame);
-        pre_mesument = lateral_mesument;
+        pre_mesument = lateral_mesument;  // XXX Undefined!
         int found_sidelines = image_process(frame, out, lateral_mesument, stop_distance);
         cv::imshow("frame", out);
-        // cout<<found_sidelines<<endl;
         if (found_sidelines == 1) {
             mesument_diff = lateral_mesument - pre_mesument;
-            // cout<<mesument_diff<<endl;
             if (is_down) {
                 if (mesument_diff  > 100) {
                     is_down = false;
                 } else {
-                    lateral_mesument += mesument_diff;   
+                    lateral_mesument += mesument_diff;
                 }
             } else if (is_up) {
                 if (mesument_diff  < 100) {
@@ -476,17 +462,15 @@ void camera() {
                 }
             } else if (mesument_diff < -100) {
                 is_down = true;
-                
+
             } else if(mesument_diff > 100) {
                 is_up = true;
             } else {
-                cout<<"something wrong with prefilter/n";
+                cout << "something wrong with prefilter" << endl;
             }
         } else {
-            cout<<"No sidelines/n";
+            cout << "No sidelines" << endl;
         }
-            // kalman(P, lateral_model, lateral_mesument, R);
-            // P = P + Q;            
         if (cv::waitKey(10) > 0) break;
     }
     cap.release();
@@ -500,10 +484,8 @@ void video() {
     int lateral_position;
     int stop_distance;
 
-    // string filename = "./Reference/road_sample.mp4";
-    // cv::VideoCapture cap(filename);
     cv::VideoCapture cap("./Reference/road_sample.mp4", cv::CAP_ANY,
-      { cv::CAP_PROP_HW_ACCELERATION, cv::VIDEO_ACCELERATION_ANY });
+        { cv::CAP_PROP_HW_ACCELERATION, cv::VIDEO_ACCELERATION_ANY });
 
     cout<<cv::getBuildInformation()<<endl;
 
@@ -511,40 +493,16 @@ void video() {
         cout << "Error opening video stream or file" << endl;
         return;
     }
-    while(1) {
+    while (1) {
         cv::Mat frame;
         cap >> frame;
         if (frame.empty())
             break;
         image_process(frame, out, lateral_position, stop_distance);
-
-        //imshow( "Frame", out );
-
     }
 }
 
 
-// ### Main
 int main() {
-
     camera();
-    // for (int i=0; i<1000; i++) {
-    //    process();
-
-    //  }
-    // video();
-//     # process("Reference\\Right_turn.png")
-//     # process("Reference\\three_way_1.png")
-//     process("Reference\\three_way_2.png")
-//     # process("Reference\\three_way_3.png")
-
-//     # camera()
-//     # process("Reference\\three_way_1_tilted.png")
-//     # process("Reference\\three_way_2_tilted.png")
-//     # process("Reference\\three_way_3_tilted.png")
-//     # process("Reference\\Left_turn_tilted.png")
-//     # process("Reference\\Right_turn_tilted.png")
-
-//     # process("Reference\\Ideal.png")
-//     cv2.waitKey(0)
 }
