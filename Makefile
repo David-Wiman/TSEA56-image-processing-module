@@ -7,10 +7,12 @@ CC_CPP = g++
 CC_C = gcc
 
 # Other include directories with headers
-INC := -I/usr/local/include/opencv4/
+INC := 
+# -I/usr/local/include/opencv4/
 
 # Compiling flags
-CPPFLAGS += -Wno-deprecated-declarations -Wall -Wextra -pedantic -Weffc++ -Wold-style-cast -Woverloaded-virtual -fmax-errors=3 -g
+CPPFLAGS += -Wno-deprecated-declarations -Wall -Wextra -pedantic -Weffc++ -Wold-style-cast -Woverloaded-virtual -fmax-errors=3 -g 
+# CPPFLAGS += -Wconversion -Wcast-align -Wunused -Wshadow -Wold-style-cast -Wpointer-arith -Wcast-qual -Wmissing-prototypes -Wno-missing-braces
 CPPFLAGS += -std=c++17 -MMD $(INC)
 
 CFLAGS := -Wall -Wextra -pedantic
@@ -18,8 +20,8 @@ CFLAGS += $(INC)
 
 # Linking flags
 
-#OPENCV = `pkg-config opencv4 --cflags --libs` -lopencv_core -lopencv_video
-OPENCV = -lopencv_core -lopencv_video -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio -lopencv_highgui
+OPENCV = `pkg-config opencv4 --cflags --libs` -lopencv_core -lopencv_video
+OPENCV += -lopencv_core -lopencv_video -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio -lopencv_highgui
 LDFLAGS = $(OPENCV)
 
 # File which contains the main function
