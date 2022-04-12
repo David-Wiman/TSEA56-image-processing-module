@@ -432,7 +432,6 @@ int image_process(cv::Mat imput_image, cv::Mat &output_image, int &lateral_posit
         output_image = print_lines_on_image(stop_lines, output_image, cv::Scalar(0, 255, 0));
         stop_distance = get_stop_line_distance(stop_lines[0]);
         // cout<<"l_s: "<<stop_distance<<endl;
-
     }
     return 1;
 }
