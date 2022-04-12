@@ -1,8 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <opencv2/opencv.hpp>
-#include <opencv2/videoio.hpp>
+//#include <opencv2/opencv.hpp>
+//#include <opencv2/videoio.hpp>
 
 #include "image_processing.h"
 #include "help_funtions.h"
@@ -22,15 +22,17 @@ ImageProcessing::~ImageProcessing() {
     cv::destroyAllWindows();
 }
 
-image_proc_t ImageProcessing::process_next_frame() {
+image_proc_t ImageProcessing::process_next_frame(cv::Mat frame) {
     // Get next frame
-    cv::Mat frame{};
-    cv::Mat out{};
+    // cv::Mat frame{};
+    // cv::Mat out{};
 
-    video_capture.grab();
-    video_capture.retrieve(frame);
-    int stop_distance;
-    int angle{};
+    //video_capture.grab();
+    //video_capture.retrieve(frame);
+    //int stop_distance;
+    //int angle{};
+    angle = 0;
+    stop_distance=0;
 
     int pre_lateral = lateral_position;  // XXX Undefined!
     int found_sidelines_success = image_process(frame, true, lateral_position, stop_distance);
@@ -54,3 +56,31 @@ image_proc_t ImageProcessing::process_next_frame() {
     output.stop_distance = stop_distance;
     return output;
 }
+// ------------PROCESS-------------------
+Process::Process(const char* default_file) : default_file{default_file} {
+  src = cv::imread(cv::samples::findFile(default_file), cv::IMREAD_GRAYSCALE);
+}
+Process::~Process() {}
+//---------------------------------------------
+
+//-----------------CAMERA--------------------------
+Camera::Camera() {}
+
+Camera::~Camera() {}
+
+void Camera::start_camera() {
+  //--- INITIALIZE VIDEOCAPTURE
+  cv::VideoCapture cap(cv::CAP_ANY);
+  // check if we succeeded
+  if (!cap.isOpened()) {
+      cerr << "ERROR! Unable to open camera\n";
+      return;
+  }
+  ImageProcessing imageprocessor(true, 100);
+  for (;;) {
+    cap.grab();
+    cap.retrieve(frame);
+    output = imageprocessor.process_next_frame(frame);
+  }
+}
+// --------------------------------------------
