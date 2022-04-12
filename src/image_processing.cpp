@@ -1,4 +1,6 @@
 #include "image_processing.h"
+#include "help_funtions.h"
+
 
 #include <iostream>
 #include <vector>
@@ -8,7 +10,7 @@
 
 using namespace std;
 
-ImageProcessing::ImageProcessing(bool visualize): video_capture{cv::CAP_ANY} {
+ImageProcessing::ImageProcessing(bool visualize2, int lateral_position):visualize{visualize2}, lateral_position{lateral_position}, video_capture{cv::CAP_ANY} {
 
     // Check if we succeeded to open video capture
     if (!video_capture.isOpened()) {
@@ -23,41 +25,34 @@ ImageProcessing::~ImageProcessing() {
 }
 
 image_proc_t ImageProcessing::process_next_frame() {
-
     // Get next frame
     cv::Mat frame{};
+    cv::Mat out{};
+
     video_capture.grab();
     video_capture.retrieve(frame);
+    int stop_distance;
+    int angle{};
 
-    pre_mesument = lateral_mesument;  // XXX Undefined!
-    int found_sidelines = image_process(frame, out, lateral_mesument, stop_distance);
+    int pre_lateral= lateral_position;  // XXX Undefined!
+    int found_sidelines_success = image_process(frame, out, lateral_position, stop_distance);
+    image_proc_t output;
 
     if (visualize)
         cv::imshow("frame", out);
 
-    if (found_sidelines == 1) {
-        mesument_diff = lateral_mesument - pre_mesument;
-        if (is_down) {
-            if (mesument_diff  > 100) {
-                is_down = false;
-            } else {
-                lateral_mesument += mesument_diff;
-            }
-        } else if (is_up) {
-            if (mesument_diff  < 100) {
-                is_up = false;
-            } else {
-                lateral_mesument += mesument_diff;
-            }
-        } else if (mesument_diff < -100) {
-            is_down = true;
-        } else if(mesument_diff > 100) {
-            is_up = true;
-        } else {
-            cout << "something wrong with prefilter" << endl;
-        }
-    } else {
+
+    int lateral_diff = lateral_position - pre_lateral;
+    if (found_sidelines_success != 1 || abs(lateral_diff) > 100) {
         cout << "No sidelines" << endl;
+        output.success = false;
+        return output;
+    } else {
+        //kalman
     }
-    if (cv::waitKey(10) > 0) break;
+    output.success = true;
+    output.angle = angle;
+    output.lateral_position = lateral_position;
+    output.stop_distance = stop_distance;
+    return output;
 }
