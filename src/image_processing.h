@@ -19,11 +19,13 @@ public:
     image_proc_t process_next_frame();
 
 private:    
-    bool visualize;
+    const bool visualize;
     int lateral_position;
     cv::VideoCapture video_capture;
     bool is_up{false};
     bool is_down{false};
+    const cv::Mat transformation_matrix;
+
 
 };
 

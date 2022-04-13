@@ -9,12 +9,13 @@
 
 using namespace std;
 
-ImageProcessing::ImageProcessing(bool visualize2, int lateral_position):visualize{visualize2}, lateral_position{lateral_position}, video_capture{cv::CAP_ANY} {
+ImageProcessing::ImageProcessing(bool visualize2, int lateral_position) :visualize{visualize2}, lateral_position{lateral_position}, video_capture{cv::CAP_ANY} {
     // Check if we succeeded to open video capture
     if (!video_capture.isOpened()) {
         cerr << "ERROR! Unable to open camera\n";
         return;
     }
+    cv::Mat transformation_matrix = perspective_transform_init();
 }
 
 ImageProcessing::~ImageProcessing() {
@@ -33,11 +34,12 @@ image_proc_t ImageProcessing::process_next_frame() {
     int angle{};
 
     int pre_lateral = lateral_position;  // XXX Undefined!
+    perspective_transform(frame, transformation_matrix);
     int found_sidelines_success = image_process(frame, true, lateral_position, stop_distance);
     image_proc_t output;
 
     if (visualize) {
-        cv::imshow("frame", out);
+        cv::imshow("frame", frame);
     }
 
     int lateral_diff = lateral_position - pre_lateral;

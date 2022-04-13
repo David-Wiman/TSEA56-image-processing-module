@@ -6,8 +6,10 @@ int main() {
     int lateral_position;
     int stop_distance;
     cv::Mat out;
+    for (int i=0; i<1000; i++) {
+        image_process(src, true, lateral_position, stop_distance);
 
-    image_process(src, true, lateral_position, stop_distance);
+    }
     cv::imwrite("Gray_Image.jpg", src);
 
     // int lateral_position = 100;

@@ -3,7 +3,6 @@
 #include <cmath>
 #include <opencv2/opencv.hpp>
 #include <opencv2/videoio.hpp>
-#include <algorithm>
 
 #include "help_funtions.h"
 
@@ -41,7 +40,7 @@ void remove_negative_rho(vector<cv::Vec2f>& lines) {
 }
 
 cv::Mat print_circles_on_image(vector<cv::Vec3f> circles, cv::Mat& image) {
-    for (unsigned int i=0; i<circles.size(); i++) {
+    for (unsigned int i=0; i < circles.size(); i++) {
         cv::Point cp;
         cp.x = cvRound(circles[i][0]);
         cp.y = cvRound(circles[i][1]);
@@ -157,7 +156,7 @@ void classify_lines(vector<cv::Vec2f> lines, vector<cv::Vec2f> &side_lines, vect
     return;
 }
 
-void perspective_transform(cv::Mat& image) {
+cv::Mat perspective_transform_init() {
     cv::Point2f pts1[4];
     pts1[0] = cv::Point2f(240.0f, 50.0f);
     pts1[1] = cv::Point2f(390.0f, 50.0f);
@@ -169,12 +168,14 @@ void perspective_transform(cv::Mat& image) {
     pts2[1] = cv::Point2f(430.0f, 30.0f);
     pts2[2] = cv::Point2f(270.0f, 500.0f);
     pts2[3] = cv::Point2f(430.0f, 500.0f);
-
     cv::Mat matrix = cv::getPerspectiveTransform(pts1, pts2);
-    cv::Mat ipm;
-    cv::Size size(710, 550);
+}
+
+void perspective_transform(cv::Mat& image, const cv::Mat& matrix) {
+    // cv::Mat ipm;
+    cv::Size size(image.size().width, image.size().height);
     cv::Scalar value(255, 255, 255);
-    warpPerspective(image, ipm, matrix, size, cv::INTER_LINEAR, cv::BORDER_CONSTANT, value);
+    warpPerspective(image, image, matrix, size, cv::INTER_LINEAR, cv::BORDER_CONSTANT, value);
     return;
 }
 
@@ -214,7 +215,7 @@ cv::Vec2f average_line(vector<cv::Vec2f> lines) {
     cv::Vec2f line;
     float x = 0, y = 0;
     for (unsigned int i=0; i < lines.size(); i++) {
-        line[0] += lines[i][0] ; // rho
+        line[0] += lines[i][0] ;  // rho
         x += cos(lines[i][1]);
         y += sin(lines[i][1]);
     }
@@ -351,9 +352,9 @@ int get_lateral_position(vector<cv::Vec2f> side_lines, int image_w, int image_h)
 
     int lat = cvRound((b_vr*cos(theta_r) + b_v - b_vl*cos(theta_l))/2);
 
-    cout << "deviation: " <<  (theta_l+theta_r)/2 <<
-          "\nl_lat left: " << b_v - b_vl*cos(theta_l) <<
-          "\tl_lat right: " << b_vr*cos(theta_r);
+    // cout << "deviation: " <<  (theta_l+theta_r)/2 <<
+    //       "\nl_lat left: " << b_v - b_vl*cos(theta_l) <<
+    //       "\tl_lat right: " << b_vr*cos(theta_r);
     return lat;
 }
 
@@ -410,8 +411,9 @@ int image_process(cv::Mat& image, bool print_lines, int &lateral_position, int &
     classify_lines(lines, side_lines, stop_lines);
     if (side_lines.size() >= 2) {
         lateral_position = get_lateral_position(side_lines, image.size().width, image.size().height);
-        cout << "l_lat: " << lateral_position << endl;
+        // cout << "l_lat: " << lateral_position << endl;
     } else {
+     
         return -1;
     }
     /*cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
@@ -430,7 +432,7 @@ int image_process(cv::Mat& image, bool print_lines, int &lateral_position, int &
 
     if (stop_lines.size() != 0) {
         stop_distance = get_stop_line_distance(stop_lines[0], image.size().width, image.size().height);
-        cout << "l_s: " << stop_distance << endl;
+        // cout << "l_s: " << stop_distance << endl;
         if (print_lines) {
             print_lines_on_image(stop_lines, image, cv::Scalar(0, 255, 0));
         }

@@ -23,7 +23,8 @@
     bool  lines_perpendicular(cv::Vec2f line_1, cv::Vec2f line_2);
     float get_rho(cv::Vec2f line);
     void classify_lines(std::vector<cv::Vec2f> lines, std::vector<cv::Vec2f> &side_lines, std::vector<cv::Vec2f> &stop_lines);
-    void perspective_transform(cv::Mat& image);
+    cv::Mat perspective_transform_init();
+    void perspective_transform(cv::Mat& image, const cv::Mat& matrix);
     void kalman(float &P, int &x_model, int z, float R);
     int add_vote(cv::Vec2f line1, cv::Vec2f line2);
     int sum_votes(std::vector<cv::Vec2f> lines);
