@@ -7,9 +7,9 @@ ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv
         std::cerr << "ERROR! Unable to open camera\n";
         return;
     }
-    video_capture.set(3, 180); // set frame size
-    video_capture.set(4, 100); // set frame size
-    video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
+    // video_capture.set(3, 180); // set frame size
+    // video_capture.set(4, 100); // set frame size
+    // video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
 
     transformation_matrix = perspective_transform_init();
 }
@@ -25,14 +25,15 @@ image_proc_t ImageProcessing::process_next_frame() {
     video_capture.retrieve(frame);
 
     int pre_lateral = lateral_position;
-    perspective_transform(frame, transformation_matrix);
+    // perspective_transform(frame, transformation_matrix);
     int found_sidelines_success = image_process(frame, true, lateral_position, road_angle, stop_distance);
-
+    std::cout<<pre_lateral<<std::endl;
     if (visualize) {
         cv::imshow("frame", frame);
     }
 
     int lateral_diff = lateral_position - pre_lateral;
+    std::cout<<abs(lateral_diff)<<found_sidelines_success<<std::endl;
     if (found_sidelines_success != 1 || abs(lateral_diff) > 100) {
         std::cout << "No sidelines" << std::endl;
         output.success = false;
@@ -45,5 +46,6 @@ image_proc_t ImageProcessing::process_next_frame() {
     output.road_angle = road_angle;
     output.lateral_position = lateral_model;
     output.stop_distance = stop_distance;
+
     return output;
 }
