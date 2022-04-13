@@ -4,22 +4,28 @@
 using namespace std;
 
 int main() {
+    image_proc_t proccesed_img{};
     // ------------- FOR TESTING -----------------
     // int lateral_position;
     // float angle;
     // int stop_distance;
-    // cv::Mat src = cv::imread(cv::samples::findFile("./Reference/Left_turn.png"), cv::IMREAD_GRAYSCALE);
-    // for (int i=0; i<10; i++){
-    //     image_process(src, true, lateral_position, angle, stop_distance);
-    // cv::imwrite("Gray_Image.jpg", src);
-
+    // cout<<"start"<<endl;
+    // cv::Mat src_out;
+    // cv::Mat src = cv::imread(cv::samples::findFile("./Reference/Left_turn.png"));
+    // cv::resize(src, src_out, cv::Size(), 0.5, 0.5);
+    // for (int i=0; i<100; i++){
+    //     image_process(src_out, true, lateral_position, angle, stop_distance);
+    // }
+    // cout<<"end"<<endl;
+    // cv::imwrite("Gray_Image.jpg", src_out);
+    
     // -------------- END TEST ---------------------
 
     // -------------- FOR CAR -----------------
 
-    ImageProcessing imageprocessor(true);
+    ImageProcessing imageprocessor(false);
     while (true) {
-        imageprocessor.process_next_frame();
+        proccesed_img = imageprocessor.process_next_frame();
         if (cv::waitKey(10) > 0) break;
     }
     imageprocessor.~ImageProcessing();

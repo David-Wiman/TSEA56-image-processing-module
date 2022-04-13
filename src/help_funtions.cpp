@@ -385,8 +385,7 @@ int image_process(cv::Mat& image, bool print_lines, int &lateral_position, float
     vector<cv::Vec3f> circles;
     vector<cv::Vec3f> filted_circles;
 
-    // perspective_transform(image);
-    // cv::cvtColor(imput_image, gray, cv::COLOR_RGB2GRAY);
+    // cv::cvtColor(image, gray, cv::COLOR_RGB2GRAY);
     cv::GaussianBlur(image, gauss, cv::Size(3, 3), 0, 0);
     cv::Canny(gauss, edges, 50, 200, 3);
     cv::HoughLines(edges, lines, 1, CV_PI/180, 80, 0, 0);
@@ -411,16 +410,17 @@ int image_process(cv::Mat& image, bool print_lines, int &lateral_position, float
     }*/
     // output_image = print_circles_on_image(circles, output_image);
     if (print_lines) {
-        print_lines_on_image(side_lines, image, cv::Scalar(255, 100, 15));
+        print_lines_on_image(side_lines, gauss, cv::Scalar(255, 100, 15));
     }
 
     if (stop_lines.size() != 0) {
         stop_distance = get_stop_line_distance(stop_lines[0], image.size().width, image.size().height);
         // cout << "l_s: " << stop_distance << endl;
         if (print_lines) {
-            print_lines_on_image(stop_lines, image, cv::Scalar(0, 255, 0));
+            print_lines_on_image(stop_lines, gauss, cv::Scalar(0, 255, 0));
         }
     }
+    image = gauss;
     return 1;
 }
 

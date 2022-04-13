@@ -27,20 +27,21 @@ image_proc_t ImageProcessing::process_next_frame() {
     int pre_lateral = lateral_position;
     // perspective_transform(frame, transformation_matrix);
     int found_sidelines_success = image_process(frame, true, lateral_position, road_angle, stop_distance);
-    std::cout<<pre_lateral<<std::endl;
     if (visualize) {
         cv::imshow("frame", frame);
     }
 
     int lateral_diff = lateral_position - pre_lateral;
-    std::cout<<abs(lateral_diff)<<found_sidelines_success<<std::endl;
     if (found_sidelines_success != 1 || abs(lateral_diff) > 100) {
         std::cout << "No sidelines" << std::endl;
         output.success = false;
         return output;
     } else {
+
         kalman(P, lateral_model, lateral_position, R);
         P = P + Q;
+        std::cout << "lat:" << lateral_model <<", angle:"<<road_angle << ", stop:" << stop_distance << std::endl;
+
     }
     output.success = true;
     output.road_angle = road_angle;
