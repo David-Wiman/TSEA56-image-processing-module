@@ -1,56 +1,39 @@
 #include <opencv2/opencv.hpp>
-//#include <opencv2/videoio.hpp>
 
 #ifndef IMAGE_PROCESSING_H
 #define IMAGE_PROCESSING_H
 
 typedef struct image_processing_output {
-    bool success;
-    int lateral_position;
-    int stop_distance;
-    float angle;
+    bool success = 0;
+    int lateral_position = 0;
+    int stop_distance = 0;
+    float road_angle = 0;
 } image_proc_t;
 
 class ImageProcessing {
-public:
-    ImageProcessing(bool visualize=false, int lateral_position=100);
+ public:
+    ImageProcessing(const bool visualize = false);
     ~ImageProcessing();
 
-    image_proc_t process_next_frame(cv::Mat frame);
+    image_proc_t process_next_frame();
 
-private:    
+ private:
     const bool visualize;
-    int lateral_position;
-    int stop_distance;
-    int angle;
+    int lateral_position = 100;
+    int lateral_model = 0;
+    int stop_distance = 0;
+    float road_angle = 0;
     cv::VideoCapture video_capture;
+    float P = 10;
+    const int R = 10;  // Mesunet noise
+    const float Q = 10;  // Process noise
     bool is_up{false};
     bool is_down{false};
-    const cv::Mat transformation_matrix;
+    cv::Mat transformation_matrix{};
 
-    image_proc_t output{0};
+    image_proc_t output{};
     cv::Mat frame{};
     cv::Mat out{};
-};
-
-class Process {
-public:
-  Process(const char* default_file);
-  ~Process();
-private:
-  const char* default_file;
-  cv::Mat src;
-
-};
-
-class Camera {
-public:
-  Camera();
-  ~Camera();
-  void start_camera();
-private:
-  cv::Mat frame;
-  image_proc_t output{0};
 };
 
 #endif  // IMAGE_PROCESSING_H

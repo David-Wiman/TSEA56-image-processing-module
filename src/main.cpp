@@ -4,26 +4,24 @@
 using namespace std;
 
 int main() {
-    Process process("./Reference/Left_turn.png");
-    Camera camera;
-    camera.start_camera();
+    // ------------- FOR TESTING -----------------
+    int lateral_position;
+    float angle;
+    int stop_distance;
+    cv::Mat src = cv::imread(cv::samples::findFile("./Reference/Left_turn.png"), cv::IMREAD_GRAYSCALE);
+    for (int i=0; i<10; i++){
+        image_process(src, true, lateral_position, angle, stop_distance);
+    }
+    // -------------- END TEST ---------------------
 
-
-    //cv::Mat src = cv::imread(cv::samples::findFile("./Reference/Left_turn.png"), cv::IMREAD_GRAYSCALE);
-    // int lateral_position;
-    // int stop_distance;
-    // cv::Mat out;
-    //cout << "hej1111111111111111111\n\n\n\n";
-
-    // ImageProcessing img_proc(false, 100);
-    // img_proc.process_next_frame();
-
-    // image_process(src, true, lateral_position, stop_distance);
+    // -------------- FOR CAR -----------------
     // cv::imwrite("Gray_Image.jpg", src);
 
-    //int lateral_position = 100;
-    //ImageProcessing imageprocessor(true, 100);
-    //while (true) {
+    // ImageProcessing imageprocessor(true);
+    // while (true) {
     //    imageprocessor.process_next_frame();
-    //}
+    // }
+    // imageprocessor.~ImageProcessing();
+
+    // -------------- END CAR ---------------
 }

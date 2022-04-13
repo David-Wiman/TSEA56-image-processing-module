@@ -1,8 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <opencv2/opencv.hpp>
-#include <opencv2/videoio.hpp>
 
 #include "help_funtions.h"
 
@@ -49,14 +47,12 @@ cv::Mat print_circles_on_image(vector<cv::Vec3f> circles, cv::Mat& image) {
     return image;
 }
 
-
 bool comp_rho(cv::Vec2f line1, cv::Vec2f line2) {
     return line1[0] > line2[0];
 }
 bool comp_rho_rev(cv::Vec2f line1, cv::Vec2f line2) {
     return line1[0] < line2[0];
 }
-
 
 float angle_difference(float angle_1, float angle_2) {
     float diff = fmod(abs(angle_1 - angle_2), CV_PI);
@@ -65,7 +61,6 @@ float angle_difference(float angle_1, float angle_2) {
     }
     return diff;
 }
-
 
 float circle_line_dist(cv::Vec3f circle, cv::Vec2f line) {
     float rho = line[0];
@@ -132,15 +127,6 @@ void classify_lines(vector<cv::Vec2f> lines, vector<cv::Vec2f> &side_lines, vect
                 side_lines.push_back(lines[i]);
             }
         }
-        // Check if parallell to first line
-        // vector<cv::Vec2f> tmp_lines;
-        // tmp_lines.push_back(side_lines[0]);
-        // for (unsigned int i=1; i<side_lines.size(); i++) {
-        //     if (lines_parallell(side_lines[i], side_lines[0])) {
-        //         tmp_lines.push_back(lines[i]);
-        //     }
-        // }
-        // side_lines = tmp_lines;
 
     //  Add stop_lines that are perpendicular to side_line and closest to button.
         if (side_lines.size() >= 1) {
@@ -169,6 +155,7 @@ cv::Mat perspective_transform_init() {
     pts2[2] = cv::Point2f(270.0f, 500.0f);
     pts2[3] = cv::Point2f(430.0f, 500.0f);
     cv::Mat matrix = cv::getPerspectiveTransform(pts1, pts2);
+    return matrix;
 }
 
 void perspective_transform(cv::Mat& image, const cv::Mat& matrix) {
@@ -179,7 +166,7 @@ void perspective_transform(cv::Mat& image, const cv::Mat& matrix) {
     return;
 }
 
-void kalman(float &P, int &x_model, int z, float R = 15) {
+void kalman(float &P, int &x_model, int z, float R) {
     float K = P / (P+R);
     x_model = x_model + K*(z-x_model);
     P = (1-K)*P;
@@ -270,15 +257,6 @@ void get_unique_lines(vector<cv::Vec2f> &lines, int theta_margin = 5, int rho_ma
             line_clusters.push_back(line2);
         }
     }
-    // for (int i=0; i<line_clusters.size(); i++) {
-    //     cout << line_clusters[i].size() << endl;
-    //     cout << average_rho(line_clusters[i]) << endl;
-    //     cout << average_theta(line_clusters[i]) << endl;
-
-    //     for (int j=0; j<line_clusters[i].size(); j++) {
-    //         cout << line_clusters[i][j] << endl;
-    //     }
-    // }
 
     // Merge similar lines by averaging
     vector<cv::Vec2f> unique_lines;
@@ -358,6 +336,12 @@ int get_lateral_position(vector<cv::Vec2f> side_lines, int image_w, int image_h)
     return lat;
 }
 
+float get_road_angle(vector<cv::Vec2f> side_lines) {
+    float theta_l = side_lines[0][1];
+    float theta_r = side_lines[1][1];
+    return (theta_l+theta_r)/2;
+}
+
 int get_stop_line_distance(cv::Vec2f stop_line, int image_w, int image_h) {
     float theta;
     float rho;
@@ -365,7 +349,6 @@ int get_stop_line_distance(cv::Vec2f stop_line, int image_w, int image_h) {
     theta = stop_line[1];
     return cvRound(image_h*sin(theta) + image_w/2*cos(theta) - rho);
 }
-
 
 void prefilter(int& lateral_position, int pre_lateral_position, bool& is_down, bool& is_up) {
     if (lateral_position == INT_MIN) {
@@ -396,7 +379,7 @@ void prefilter(int& lateral_position, int pre_lateral_position, bool& is_down, b
     }
 }
 
-int image_process(cv::Mat& image, bool print_lines, int &lateral_position, int &stop_distance) {
+int image_process(cv::Mat& image, bool print_lines, int &lateral_position, float &road_angle, int &stop_distance) {
     cv::Mat edges, gray, gauss;
     vector<cv::Vec2f> lines, side_lines, stop_lines;
     vector<cv::Vec3f> circles;
@@ -411,6 +394,7 @@ int image_process(cv::Mat& image, bool print_lines, int &lateral_position, int &
     classify_lines(lines, side_lines, stop_lines);
     if (side_lines.size() >= 2) {
         lateral_position = get_lateral_position(side_lines, image.size().width, image.size().height);
+        road_angle = get_road_angle(side_lines);
         // cout << "l_lat: " << lateral_position << endl;
     } else {
      

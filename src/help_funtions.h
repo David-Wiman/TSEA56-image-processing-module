@@ -5,7 +5,6 @@
 #include <vector>
 #include <cmath>
 #include <opencv2/opencv.hpp>
-//#include <opencv2/videoio.hpp>
 
 
 // private:
@@ -36,10 +35,11 @@
     void get_unique_lines(std::vector<cv::Vec2f> &lines, int theta_margin, int rho_margin);
     std::vector<cv::Vec3f> get_unique_circles(std::vector<cv::Vec3f>& circles);
     int get_lateral_position(std::vector<cv::Vec2f> side_lines, int image_w, int image_h);
+    float get_road_angle(std::vector<cv::Vec2f> side_lines);
     int get_stop_line_distance(cv::Vec2f stop_line, int image_w, int image_h);
 // public:
     void prefilter(int& lateral_position, int pre_lateral_position, bool& is_down, bool& is_up);
-    int image_process(cv::Mat& imput_image, bool print_lines, int &lateral_position, int &stop_distance);
+    int image_process(cv::Mat& imput_image, bool print_lines, int &lateral_position, float &road_angle, int &stop_distance);
 
 
 #endif  // SRC_HELP_FUNTIONS_H_
