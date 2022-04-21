@@ -394,6 +394,22 @@ int image_process(cv::Mat& image, bool print_lines, float &lateral_position, flo
     float image_width = static_cast<float>(image.size().width);
 
     // cv::cvtColor(image, gray, cv::COLOR_RGB2GRAY);
+
+    // cv::Mat dst, map1, map2,new_camera_matrix;
+    // cv::Size imageSize(cv::Size(image.cols,image.rows));
+    
+    // // Refining the camera matrix using parameters obtained by calibration
+    // new_camera_matrix = cv::getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, 1, imageSize, 0);
+    
+    // // Method 1 to undistort the image
+    // cv::undistort(image, dst, new_camera_matrix, distCoeffs, new_camera_matrix);
+    
+    // // Method 2 to undistort the image
+    // cv::initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(), new_camera_matrix, imageSize, CV_16SC2, map1, map2);
+    
+    // cv::remap(image, dst, map1, map2, cv::INTER_LINEAR);
+
+
     cv::GaussianBlur(image, gauss, cv::Size(3, 3), 0, 0);
     cv::Canny(gauss, edges, 50, 200, 3);
     cv::HoughLines(edges, lines, 1, PI/180, 80, 0, 0);
