@@ -22,7 +22,7 @@ ImageProcessing::~ImageProcessing() {
 image_proc_t ImageProcessing::process_next_frame() {
     int stop_distance = 0;
     float road_angle = 0;
-    int lateral_position = 0;
+    float lateral_position = 0;
     const int R = 10;  // Mesunet noise
     const float Q = 10;  // Process noise
 
@@ -38,7 +38,7 @@ image_proc_t ImageProcessing::process_next_frame() {
         cv::imshow("frame", frame);
     }
 
-    int lateral_diff = lateral_position - lateral_model;
+    float lateral_diff = lateral_position - lateral_model;
     if (found_sidelines_success != 1 || abs(lateral_diff) > 100) {
         std::cout << "No sidelines" << std::endl;
         output.success = false;

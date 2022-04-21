@@ -5,7 +5,7 @@
 
 typedef struct image_processing_output {
     bool success = 0;
-    int lateral_position = 0;
+    float lateral_position = 0;
     int stop_distance = 0;
     float road_angle = 0;
 } image_proc_t;
@@ -19,7 +19,7 @@ class ImageProcessing {
 
  private:
     const bool visualize;
-    int lateral_model = 100;
+    float lateral_model = 100;
     cv::VideoCapture video_capture;
     float P = 10;
     cv::Mat transformation_matrix{};

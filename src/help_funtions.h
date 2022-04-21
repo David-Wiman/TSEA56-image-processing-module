@@ -1,10 +1,14 @@
 #ifndef SRC_HELP_FUNTIONS_H_
 #define SRC_HELP_FUNTIONS_H_
 
+
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include <opencv2/opencv.hpp>
+
+const float PI = 3.14159265359f;
+
 
 
 // private:
@@ -24,7 +28,7 @@
     void classify_lines(std::vector<cv::Vec2f> lines, std::vector<cv::Vec2f> &side_lines, std::vector<cv::Vec2f> &stop_lines);
     cv::Mat perspective_transform_init();
     void perspective_transform(cv::Mat& image, const cv::Mat& matrix);
-    void kalman(float &P, int &x_model, int z, float R);
+    void kalman(float &P, float &x_model, float z, float R);
     int add_vote(cv::Vec2f line1, cv::Vec2f line2);
     int sum_votes(std::vector<cv::Vec2f> lines);
     float average_rho(std::vector<cv::Vec2f> lines);
@@ -32,14 +36,14 @@
     float average_theta(std::vector<cv::Vec2f> lines);
     cv::Vec2f average_line(std::vector<cv::Vec2f> lines);
     cv::Vec3f average_circle(std::vector<cv::Vec3f> circles);
-    void get_unique_lines(std::vector<cv::Vec2f> &lines, int theta_margin, int rho_margin);
+    void get_unique_lines(std::vector<cv::Vec2f> &lines, float theta_margin, float rho_margin);
     std::vector<cv::Vec3f> get_unique_circles(std::vector<cv::Vec3f>& circles);
-    int get_lateral_position(std::vector<cv::Vec2f> side_lines, int image_w, int image_h);
+    float get_lateral_position(std::vector<cv::Vec2f> side_lines, float image_w, float image_h);
     float get_road_angle(std::vector<cv::Vec2f> side_lines);
-    int get_stop_line_distance(cv::Vec2f stop_line, int image_w, int image_h);
+    int get_stop_line_distance(cv::Vec2f stop_line, float image_w, float image_h);
 // public:
     void prefilter(int& lateral_position, int pre_lateral_position, bool& is_down, bool& is_up);
-    int image_process(cv::Mat& imput_image, bool print_lines, int &lateral_position, float &road_angle, int &stop_distance);
+    int image_process(cv::Mat& imput_image, bool print_lines, float &lateral_position, float &road_angle, int &stop_distance);
 
 
 #endif  // SRC_HELP_FUNTIONS_H_

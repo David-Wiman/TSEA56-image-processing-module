@@ -30,7 +30,7 @@ void print_lines_on_image(vector<cv::Vec2f> lines, cv::Mat& image, cv::Scalar co
 void remove_negative_rho(vector<cv::Vec2f>& lines) {
     for (unsigned int i = 0; i < lines.size(); i++) {
         if (lines[i][0] < 0) {
-            lines[i][1] += CV_PI;
+            lines[i][1] += PI;
             lines[i][0] = abs(lines[i][0]);
         }
     }
@@ -55,9 +55,9 @@ bool comp_rho_rev(cv::Vec2f line1, cv::Vec2f line2) {
 }
 
 float angle_difference(float angle_1, float angle_2) {
-    float diff = fmod(abs(angle_1 - angle_2), CV_PI);
-    if (diff > CV_PI/2) {
-        diff = CV_PI - diff;
+    float diff = fmod(abs(angle_1 - angle_2), PI);
+    if (diff > PI/2) {
+        diff = PI - diff;
     }
     return diff;
 }
@@ -65,9 +65,9 @@ float angle_difference(float angle_1, float angle_2) {
 float circle_line_dist(cv::Vec3f circle, cv::Vec2f line) {
     float rho = line[0];
     float theta = line[1];
-    int x = cvRound(circle[0]);
-    int y = cvRound(circle[1]);
-    int r = cvRound(circle[2]);
+    float x = circle[0];
+    float y = circle[1];
+    float r = circle[2];
 
     float dist = abs(x*cos(theta) + y*sin(theta) + rho) - r;
 
@@ -101,15 +101,15 @@ float line_vertical_deviation(cv::Vec2f line) {
 }
 
 bool line_is_horizontal(cv::Vec2f line) {
-    return angle_difference(line[1], CV_PI/2) < 20*CV_PI/180;
+    return angle_difference(line[1], PI/2) < 20*PI/180;
 }
 
 bool lines_parallell(cv::Vec2f line_1, cv::Vec2f line_2) {
-    return abs(angle_difference(line_1[1], line_2[1])) < 20*CV_PI/180;
+    return abs(angle_difference(line_1[1], line_2[1])) < 20*PI/180;
 }
 
 bool  lines_perpendicular(cv::Vec2f line_1, cv::Vec2f line_2) {
-    return abs(angle_difference(line_1[1], line_2[1]) - CV_PI/2) < 20*CV_PI/180;
+    return abs(angle_difference(line_1[1], line_2[1]) - PI/2) < 20*PI/180;
 }
 
 float get_rho(cv::Vec2f line) {
@@ -123,7 +123,7 @@ void classify_lines(vector<cv::Vec2f> lines, vector<cv::Vec2f> &side_lines, vect
         return;
     } else {
         for (unsigned int i=0; i<lines.size(); i++) {
-            if (abs(line_vertical_deviation(lines[i])) < CV_PI/4) {
+            if (abs(line_vertical_deviation(lines[i])) < PI/4) {
                 side_lines.push_back(lines[i]);
             }
         }
@@ -166,7 +166,7 @@ void perspective_transform(cv::Mat& image, const cv::Mat& matrix) {
     return;
 }
 
-void kalman(float &P, int &x_model, int z, float R) {
+void kalman(float &P, float &x_model, float z, float R) {
     float K = P / (P+R);
     x_model = x_model + K*(z-x_model);
     P = (1-K)*P;
@@ -177,7 +177,7 @@ float average_rho(vector<cv::Vec2f> lines) {
     for (unsigned int i=0; i<lines.size(); i++) {
         sum += lines[i][0];
     }
-    return sum/lines.size();
+    return sum/static_cast<float>(lines.size());
 }
 
 float average_circle_coord(vector<cv::Vec3f> lines, int position) {
@@ -185,7 +185,7 @@ float average_circle_coord(vector<cv::Vec3f> lines, int position) {
     for (unsigned int i=0; i<lines.size(); i++) {
         sum += lines[i][position];
     }
-    return sum/lines.size();
+    return sum/static_cast<float>(lines.size());
 }
 
 
@@ -206,14 +206,14 @@ cv::Vec2f average_line(vector<cv::Vec2f> lines) {
         x += cos(lines[i][1]);
         y += sin(lines[i][1]);
     }
-    line[0] = line[0]/lines.size();
+    line[0] = line[0]/static_cast<float>(lines.size());
     line[1] = atan2(y, x);
     return line;
 }
 
 cv::Vec3f average_circle(vector<cv::Vec3f> circles) {
     cv::Vec3f circle;
-    int size = circles.size();
+    float size = static_cast<float>(circles.size());
     for (unsigned int i=0; i<circles.size(); i++) {
         circle[0] += circles[i][0];  // x
         circle[1] += circles[i][1];  // y
@@ -225,7 +225,7 @@ cv::Vec3f average_circle(vector<cv::Vec3f> circles) {
     return circle;
 }
 
-void get_unique_lines(vector<cv::Vec2f> &lines, int theta_margin = 5, int rho_margin = 60) {
+void get_unique_lines(vector<cv::Vec2f> &lines, float theta_margin = 5, float rho_margin = 60) {
     if (lines.size() <= 1) {
         return;
     }
@@ -245,7 +245,7 @@ void get_unique_lines(vector<cv::Vec2f> &lines, int theta_margin = 5, int rho_ma
             float delta_theta = average_theta(line_clusters[j]);
             delta_rho = abs(delta_rho - lines[i][0]);
             delta_theta = angle_difference(delta_theta, lines[i][1]);
-            if (delta_theta < theta_margin*CV_PI/180 && delta_rho < rho_margin) {
+            if (delta_theta < theta_margin*PI/180 && delta_rho < rho_margin) {
                 line_clusters[j].push_back(lines[i]);
                 sim = true;
                 break;
@@ -309,7 +309,7 @@ vector<cv::Vec3f> get_unique_circles(vector<cv::Vec3f> circles) {
 }
 
 // ### Position calculation
-int get_lateral_position(vector<cv::Vec2f> side_lines, int image_w, int image_h) {
+float get_lateral_position(vector<cv::Vec2f> side_lines, float image_w, float image_h) {
     sort(side_lines.begin(), side_lines.end(), comp_rho_rev);
     float rho_l = side_lines[0][0];
     float theta_l = side_lines[0][1];
@@ -319,16 +319,16 @@ int get_lateral_position(vector<cv::Vec2f> side_lines, int image_w, int image_h)
     // cout << "rho_l: " << rho_l << "\ttheta_l: " << theta_l << endl;
     // cout << "rho_r: " << rho_r << "\ttheta_r: "  << theta_r << endl;
 
-    int x_l = cvRound((rho_l - image_h*sin(theta_l)) / cos(theta_l));
-    int x_r = cvRound((rho_r - image_h*sin(theta_r)) / cos(theta_r));
+    float x_l = (rho_l - image_h*sin(theta_l)) / cos(theta_l);
+    float x_r = (rho_r - image_h*sin(theta_r)) / cos(theta_r);
     // cout <<  "x_l: " << x_l << "\tx_r: " << x_r << endl;
 
-    int b_v = x_r - x_l;
-    int b_vl = image_w/2 - x_l;
-    int b_vr = x_r - image_w/2;
+    float b_v = x_r - x_l;
+    float b_vl = image_w/2 - x_l;
+    float b_vr = x_r - image_w/2;
     // cout << "b_vl: " << b_vl << "\tb_vr: " << b_vr << endl;
 
-    int lat = cvRound((b_vr*cos(theta_r) + b_v - b_vl*cos(theta_l))/2);
+    float lat = (b_vr*cos(theta_r) + b_v - b_vl*cos(theta_l))/2;
 
     // cout << "deviation: " <<  (theta_l+theta_r)/2 <<
     //       "\nl_lat left: " << b_v - b_vl*cos(theta_l) <<
@@ -342,7 +342,7 @@ float get_road_angle(vector<cv::Vec2f> side_lines) {
     return (theta_l+theta_r)/2;
 }
 
-int get_stop_line_distance(cv::Vec2f stop_line, int image_w, int image_h) {
+int get_stop_line_distance(cv::Vec2f stop_line, float image_w, float image_h) {
     float theta;
     float rho;
     rho = stop_line[0];
@@ -379,20 +379,22 @@ void prefilter(int& lateral_position, int pre_lateral_position, bool& is_down, b
     }
 }
 
-int image_process(cv::Mat& image, bool print_lines, int &lateral_position, float &road_angle, int &stop_distance) {
+int image_process(cv::Mat& image, bool print_lines, float &lateral_position, float &road_angle, int &stop_distance) {
     cv::Mat edges, gray, gauss;
     vector<cv::Vec2f> lines, side_lines, stop_lines;
     vector<cv::Vec3f> circles;
     vector<cv::Vec3f> filted_circles;
+    float image_height = static_cast<float>(image.size().height);
+    float image_width = static_cast<float>(image.size().width);
 
     // cv::cvtColor(image, gray, cv::COLOR_RGB2GRAY);
     cv::GaussianBlur(image, gauss, cv::Size(3, 3), 0, 0);
     cv::Canny(gauss, edges, 50, 200, 3);
-    cv::HoughLines(edges, lines, 1, CV_PI/180, 80, 0, 0);
+    cv::HoughLines(edges, lines, 1, PI/180, 80, 0, 0);
     get_unique_lines(lines, 10, 58);
     classify_lines(lines, side_lines, stop_lines);
     if (side_lines.size() >= 2) {
-        lateral_position = get_lateral_position(side_lines, image.size().width, image.size().height);
+        lateral_position = get_lateral_position(side_lines, image_width, image_height);
         road_angle = get_road_angle(side_lines);
         // cout << "l_lat: " << lateral_position << endl;
     } else {
@@ -414,7 +416,7 @@ int image_process(cv::Mat& image, bool print_lines, int &lateral_position, float
     }
 
     if (stop_lines.size() != 0) {
-        stop_distance = get_stop_line_distance(stop_lines[0], image.size().width, image.size().height);
+        stop_distance = get_stop_line_distance(stop_lines[0], image_width, image_height);
         // cout << "l_s: " << stop_distance << endl;
         if (print_lines) {
             print_lines_on_image(stop_lines, gauss, cv::Scalar(0, 255, 0));
