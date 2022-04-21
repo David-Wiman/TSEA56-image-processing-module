@@ -20,18 +20,25 @@ ImageProcessing::~ImageProcessing() {
 }
 
 image_proc_t ImageProcessing::process_next_frame() {
+    int stop_distance = 0;
+    float road_angle = 0;
+    int lateral_position = 0;
+    const int R = 10;  // Mesunet noise
+    const float Q = 10;  // Process noise
+
+
     // Get next frame
     video_capture.grab();
     video_capture.retrieve(frame);
 
-    int pre_lateral = lateral_position;
+    // int pre_lateral = lateral_position;
     // perspective_transform(frame, transformation_matrix);
     int found_sidelines_success = image_process(frame, true, lateral_position, road_angle, stop_distance);
     if (visualize) {
         cv::imshow("frame", frame);
     }
 
-    int lateral_diff = lateral_position - pre_lateral;
+    int lateral_diff = lateral_position - lateral_model;
     if (found_sidelines_success != 1 || abs(lateral_diff) > 100) {
         std::cout << "No sidelines" << std::endl;
         output.success = false;
