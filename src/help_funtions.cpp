@@ -1,11 +1,17 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <algorithm>
 
 #include "help_funtions.h"
 
 #define MIN_INT -5000;
-using namespace std;
+// using namespace std;
+using std::cout;
+using std::endl;
+using std::vector;
+
+
 
 // ### Help functions
 void print_lines_on_image(vector<cv::Vec2f> lines, cv::Mat& image, cv::Scalar color = cv::Scalar(255, 100, 15)) {
@@ -42,7 +48,7 @@ cv::Mat print_circles_on_image(vector<cv::Vec3f> circles, cv::Mat& image) {
         cv::Point cp;
         cp.x = cvRound(circles[i][0]);
         cp.y = cvRound(circles[i][1]);
-        cv::circle(image, cp, cvRound(circles[i][2]), CV_RGB(0,0,255), 5);
+        cv::circle(image, cp, cvRound(circles[i][2]), CV_RGB(0, 0, 255), 5);
     }
     return image;
 }
@@ -122,7 +128,7 @@ void classify_lines(vector<cv::Vec2f> lines, vector<cv::Vec2f> &side_lines, vect
         side_lines = lines;
         return;
     } else {
-        for (unsigned int i=0; i<lines.size(); i++) {
+        for (unsigned int i=0; i < lines.size(); i++) {
             if (abs(line_vertical_deviation(lines[i])) < PI/4) {
                 side_lines.push_back(lines[i]);
             }
@@ -174,7 +180,7 @@ void kalman(float &P, float &x_model, float z, float R) {
 
 float average_rho(vector<cv::Vec2f> lines) {
     float sum = 0;
-    for (unsigned int i=0; i<lines.size(); i++) {
+    for (unsigned int i=0; i < lines.size(); i++) {
         sum += lines[i][0];
     }
     return sum/static_cast<float>(lines.size());
@@ -182,7 +188,7 @@ float average_rho(vector<cv::Vec2f> lines) {
 
 float average_circle_coord(vector<cv::Vec3f> lines, int position) {
     float sum = 0;
-    for (unsigned int i=0; i<lines.size(); i++) {
+    for (unsigned int i=0; i < lines.size(); i++) {
         sum += lines[i][position];
     }
     return sum/static_cast<float>(lines.size());
@@ -191,7 +197,7 @@ float average_circle_coord(vector<cv::Vec3f> lines, int position) {
 
 float average_theta(vector<cv::Vec2f> lines) {
     float x = 0, y = 0;
-    for (unsigned int i=0; i<lines.size(); i++) {
+    for (unsigned int i=0; i < lines.size(); i++) {
         x += cos(lines[i][1]);
         y += sin(lines[i][1]);
     }
@@ -202,7 +208,7 @@ cv::Vec2f average_line(vector<cv::Vec2f> lines) {
     cv::Vec2f line;
     float x = 0, y = 0;
     for (unsigned int i=0; i < lines.size(); i++) {
-        line[0] += lines[i][0] ;  // rho
+        line[0] += lines[i][0];  // rho
         x += cos(lines[i][1]);
         y += sin(lines[i][1]);
     }
@@ -214,7 +220,7 @@ cv::Vec2f average_line(vector<cv::Vec2f> lines) {
 cv::Vec3f average_circle(vector<cv::Vec3f> circles) {
     cv::Vec3f circle;
     float size = static_cast<float>(circles.size());
-    for (unsigned int i=0; i<circles.size(); i++) {
+    for (unsigned int i=0; i < circles.size(); i++) {
         circle[0] += circles[i][0];  // x
         circle[1] += circles[i][1];  // y
         circle[2] += circles[i][2];  // r
@@ -238,9 +244,9 @@ void get_unique_lines(vector<cv::Vec2f> &lines, float theta_margin = 5, float rh
     line_clusters.push_back(line);
     bool sim = false;
 
-    for (unsigned int i=0; i<lines.size(); i++) {
+    for (unsigned int i=0; i < lines.size(); i++) {
         sim = false;
-        for (unsigned int j=0; j<line_clusters.size(); j++) {
+        for (unsigned int j=0; j < line_clusters.size(); j++) {
             float delta_rho = average_rho(line_clusters[j]);
             float delta_theta = average_theta(line_clusters[j]);
             delta_rho = abs(delta_rho - lines[i][0]);
@@ -398,7 +404,6 @@ int image_process(cv::Mat& image, bool print_lines, float &lateral_position, flo
         road_angle = get_road_angle(side_lines);
         // cout << "l_lat: " << lateral_position << endl;
     } else {
-     
         return -1;
     }
     /*cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution

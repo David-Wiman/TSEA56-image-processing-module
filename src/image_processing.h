@@ -12,7 +12,7 @@ typedef struct image_processing_output {
 
 class ImageProcessing {
  public:
-    ImageProcessing(const bool visualize);
+    explicit ImageProcessing(const bool visualize);
     ~ImageProcessing();
 
     image_proc_t process_next_frame();

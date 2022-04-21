@@ -44,11 +44,9 @@ image_proc_t ImageProcessing::process_next_frame() {
         output.success = false;
         return output;
     } else {
-
         kalman(P, lateral_model, lateral_position, R);
         P = P + Q;
-        std::cout << "lat:" << lateral_model <<", angle:"<<road_angle << ", stop:" << stop_distance << std::endl;
-
+        std::cout << "lat:" << lateral_model <<", angle:" << road_angle << ", stop:" << stop_distance << std::endl;
     }
     output.success = true;
     output.road_angle = road_angle;
