@@ -10,10 +10,25 @@
 using std::cout;
 using std::endl;
 using std::vector;
-
+using std::string;
 
 
 // ### Help functions
+cv::Mat get_transform_mtx(string src, int x, int y) {
+    std::ifstream fin(src);
+    int element;
+
+    cv::Mat matrix = cv::Mat(x,y, CV_64F);
+
+    for (int i=0; i<x; i++) {
+        for (int j=0; j<y; j++){
+            fin >> element;
+            matrix.at<double>(i,j) = element;
+        }
+    }
+    return matrix;
+}
+
 void print_lines_on_image(vector<cv::Vec2f> lines, cv::Mat& image, cv::Scalar color = cv::Scalar(255, 100, 15)) {
     for (size_t i = 0; i < lines.size(); i++) {
         float rho = lines[i][0];

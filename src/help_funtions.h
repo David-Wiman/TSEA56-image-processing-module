@@ -3,6 +3,7 @@
 
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <cmath>
 #include <opencv2/opencv.hpp>
@@ -12,6 +13,7 @@ const float PI = 3.14159265359f;
 
 
 // private:
+    cv::Mat get_transform_mtx(std::string src, int x, int y);
     void print_lines_on_image(std::vector<cv::Vec2f> lines, cv::Mat& image, cv::Scalar color);
     void remove_negative_rho(std::vector<cv::Vec2f>& lines);
     cv::Mat print_circles_on_image(std::vector<cv::Vec3f> circles, cv::Mat& image, cv::Scalar color);

@@ -1,4 +1,6 @@
 #include <opencv2/opencv.hpp>
+#include<iostream>
+#include <fstream>
 
 #ifndef IMAGE_PROCESSING_H
 #define IMAGE_PROCESSING_H
@@ -23,6 +25,9 @@ class ImageProcessing {
     cv::VideoCapture video_capture;
     float P = 10;
     cv::Mat transformation_matrix{};
+    cv::Mat mtx_matrix{};
+    cv::Mat dist_matrix{};
+    cv::Mat newcameramtx_matrix{};
 
     image_proc_t output{};
     cv::Mat frame{};

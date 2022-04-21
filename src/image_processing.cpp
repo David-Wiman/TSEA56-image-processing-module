@@ -11,7 +11,31 @@ ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv
     // video_capture.set(4, 100); // set frame size
     // video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
 
-    transformation_matrix = perspective_transform_init();
+    transformation_matrix = get_transform_mtx("matrix_constants.txt", 3, 3);
+    mtx_matrix = get_transform_mtx("mtx.txt", 3, 3);
+    dist_matrix = get_transform_mtx("dist.txt", 1, 5);
+    newcameramtx_matrix = get_transform_mtx("newcameramtx.txt", 3, 3);
+
+
+    // std::ifstream fin("matrix_constants.txt");
+    // int element;
+
+    // cv::Mat transformation_matrix = cv::Mat(3,3, CV_64F);
+
+    // for (int i=0; i<3; i++) {
+    //     for (int j=0; j<3; j++){
+    //         fin >> element;
+    //         transformation_matrix.at<double>(i,j) = element;
+    //     }
+    // }
+    // for (int i=0; i<3; i++) {
+    //     for (int j=0; j<3; j++){
+    //         std::cout << matrix.at<double>(i,j) << " ";
+    //     }
+    //     std::cout << "\n";
+    // }
+
+    // transformation_matrix = perspective_transform_init();
 }
 
 ImageProcessing::~ImageProcessing() {
