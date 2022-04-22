@@ -1,10 +1,11 @@
 #include "image_processing.h"
 #include "help_funtions.h"
+#include "log.h"
 
 ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv::CAP_ANY} {
     // Check if we succeeded to open video capture
     if (!video_capture.isOpened()) {
-        std::cerr << "ERROR! Unable to open camera\n";
+        Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
         return;
     }
     // video_capture.set(3, 180); // set frame size

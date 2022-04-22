@@ -1,9 +1,11 @@
 #include "help_funtions.h"
 #include "image_processing.h"
+#include "log.h"
 
 using namespace std;
 
 int main() {
+    Logger::init();
     image_proc_t proccesed_img{};
     // ------------- FOR TESTING -----------------
     // int lateral_position;
