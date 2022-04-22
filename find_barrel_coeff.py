@@ -22,7 +22,7 @@ prev_img_shape = None
  
 # Extracting path of individual image stored in a given directory
 images = glob.glob('./images/*.jpg')
-for fname in images:
+for fname in images[0:5]:
     img = cv2.imread(fname)
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
@@ -60,21 +60,21 @@ detected corners (imgpoints)
 """
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
  
-print("Camera matrix : \n")
-print(mtx)
-print("dist : \n")
-print(dist)
-print("rvecs : \n")
-print(rvecs)
-print("tvecs : \n")
-print(tvecs)
+# print("Camera matrix : \n")
+# print(mtx)
+# print("dist : \n")
+# print(dist)
+# print("rvecs : \n")
+# print(rvecs)
+# print("tvecs : \n")
+# print(tvecs)
 
 
 
 
 
 # Refining the camera matrix using parameters obtained by calibration
-newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 0.1, (w,h))
+newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
  
 print("newcameramtx:")
 print(newcameramtx)
@@ -124,7 +124,14 @@ f.close()
 
 # dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
 # Method 2 to undistort the image
-mapx, mapy=cv2.initUndistortRectifyMap(mtx,dist,None,newcameramtx,(w,h),5)
+
+
+
+mapx, mapy=cv2.initUndistortRectifyMap(mtx,dist,None, newcameramtx, (w,h), 5)
+
+# print("mapx: ", mapx.shape, "\nmapy: ", mapy.shape)
+print(mapx[0])
+
 
 file = open("Camera_matrix.txt", "w")
 str = repr(mapx)
@@ -132,30 +139,51 @@ file.write("mapx = " + str + "\n")
 str = repr(mapy)
 file.write("mapy = " + str + "\n")
 file.close()
- 
+
 
 img1 = cv2.imread("./images/before.jpg")
-img2 = cv2.imread("./images/chessboard_2.png")
-
-
+img2 = cv2.imread("./Help_images/chessboard_2.png")
 img1 = cv2.remap(img1, mapx, mapy, cv2.INTER_LINEAR)
 cv2.imwrite("before_2.jpg", img1)
 
 
 ret1, corners1 = cv2.findChessboardCorners(img1, (5, 8))
 ret2, corners2 = cv2.findChessboardCorners(img2, (5, 8))
-print(corners1)
-print(corners2)
+# print(corners1)
+# print(corners2)
 
 H, _ = cv2.findHomography(corners1, corners2)
-print(H)
-with open('matrix_constants.txt', 'w') as f:
+
+# print(H)
+with open('perspective_matrix.txt', 'w') as f:
     for row in H:
         f.write("%s %s %s\n" % (row[0], row[1], row[2]))
 f.close()
 
-out = cv2.warpPerspective(img1, H, (img1.shape[1], img1.shape[0]))
-cv2.imwrite("ipm.jpg", out)
+
+mapx, mapy = cv2.initUndistortRectifyMap(mtx,dist,None, np.matmul(H, newcameramtx), (640, 480), 5)
+
+
+with open('mapx.txt', 'w') as f:
+    for row in mapx:
+        for col in row:
+            f.write("%s " % (col))
+        f.write("\n")
+f.close()
+
+with open('mapy.txt', 'w') as f:
+    for row in mapy:
+        for col in row:
+            f.write("%s " % (col))
+        f.write("\n")
+f.close()
+
+# img1 = cv2.imread("./images/before.jpg")
+
+# img1 = cv2.remap(img1, mapx, mapy, cv2.INTER_LINEAR)
+
+# out = cv2.warpPerspective(img1, H, (img1.shape[1], img1.shape[0]))
+# cv2.imwrite("combined.jpg", img1)
 
 # Displaying the undistorted image
 # cv2.imshow("undistorted image",dst)

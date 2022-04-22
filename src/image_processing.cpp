@@ -19,39 +19,10 @@ ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv
     cv::Mat dist_matrix = get_transform_mtx("dist.txt", 1, 5);
     cv::Mat newcameramtx_matrix = get_transform_mtx("newcameramtx.txt", 3, 3);
 
-    cv::initUndistortRectifyMap(mtx_matrix, dist_matrix, cv::Mat(), (perspective_matrix * newcameramtx_matrix), cv::Size(frame.size().width, frame.size().height), CV_32FC1, mapx, mapy);
+    mapx = get_transform_mtx("mapx.txt", frame.size().width, frame.size().height);
+    mapy = get_transform_mtx("mapy.txt", frame.size().width, frame.size().height);
 
-    // cv::getOptimalNewCameraMatrix(mtx_matrix, dist_matrix, gray.size(), 0.1, gray.size(), 0),
-	// 		gray.size(), CV_16SC2, map1, map2);
-
-    // getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, cv::Size(WIDTH, HEIGHT), 1,
-    //                                                   cv::Size(WIDTH, HEIGHT), 0)
-    // initUndistortRectifyMap(cameraMatrix, distCoeffs, Mat(), data ,cv::Size(WIDTH, HEIGHT), cv::CV_16SC2, map1, map2);
-
-
-    // cv::initUndistortRectifyMap(*m_camData, *m_distData, cv::Mat(), *m_camData, cv::Size(resolution.first, resolution.second), cv::CV_32FC1, *m_undistMap1, *m_undistMap2);
-
-
-    // //create undistorted image
-
-
-    // std::ifstream fin("matrix_constants.txt");
-    // int element;
-
-    // cv::Mat transformation_matrix = cv::Mat(3,3, CV_64F);
-
-    // for (int i=0; i<3; i++) {
-    //     for (int j=0; j<3; j++){
-    //         fin >> element;
-    //         transformation_matrix.at<double>(i,j) = element;
-    //     }
-    // }
-    // for (int i=0; i<3; i++) {
-    //     for (int j=0; j<3; j++){
-    //         std::cout << matrix.at<double>(i,j) << " ";
-    //     }
-    //     std::cout << "\n";
-    // }
+    // cv::initUndistortRectifyMap(mtx_matrix, dist_matrix, cv::Mat(), (perspective_matrix * newcameramtx_matrix), cv::Size(frame.size().width, frame.size().height), CV_32FC1, mapx, mapy);
 
     // transformation_matrix = perspective_transform_init();
 }

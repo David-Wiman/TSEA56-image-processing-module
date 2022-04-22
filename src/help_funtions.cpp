@@ -17,7 +17,6 @@ using std::string;
 cv::Mat get_transform_mtx(string src, int x, int y) {
     std::ifstream fin(src);
     int element;
-
     cv::Mat matrix = cv::Mat(x,y, CV_64F);
 
     for (int i=0; i<x; i++) {
