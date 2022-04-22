@@ -19,7 +19,6 @@ CFLAGS += $(INC)
 
 # Linking flags
 
-OPENCV = `pkg-config opencv4 --cflags --libs` -lopencv_core -lopencv_video
 OPENCV += -lopencv_core -lopencv_video -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio -lopencv_highgui
 LDFLAGS = $(OPENCV)
 
