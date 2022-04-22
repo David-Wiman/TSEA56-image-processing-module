@@ -330,18 +330,18 @@ vector<cv::Vec3f> get_unique_circles(vector<cv::Vec3f> circles) {
 }
 
 // ### Position calculation
-float get_lateral_position(vector<cv::Vec2f> side_lines, float image_w, float image_h) {
+float get_lateral_position(vector<cv::Vec2f> side_lines, float image_w, float image_h, float &angle_left, float &angle_right) {
     sort(side_lines.begin(), side_lines.end(), comp_rho_rev);
     float rho_l = side_lines[0][0];
-    float theta_l = side_lines[0][1];
+    angle_left = side_lines[0][1];
     float rho_r = side_lines[1][0];
-    float theta_r = side_lines[1][1];
+    angle_right = side_lines[1][1];
 
     // cout << "rho_l: " << rho_l << "\ttheta_l: " << theta_l << endl;
     // cout << "rho_r: " << rho_r << "\ttheta_r: "  << theta_r << endl;
 
-    float x_l = (rho_l - image_h*sin(theta_l)) / cos(theta_l);
-    float x_r = (rho_r - image_h*sin(theta_r)) / cos(theta_r);
+    float x_l = (rho_l - image_h*sin(angle_left)) / cos(angle_left);
+    float x_r = (rho_r - image_h*sin(angle_right)) / cos(angle_right);
     // cout <<  "x_l: " << x_l << "\tx_r: " << x_r << endl;
 
     float b_v = x_r - x_l;
@@ -349,19 +349,20 @@ float get_lateral_position(vector<cv::Vec2f> side_lines, float image_w, float im
     float b_vr = x_r - image_w/2;
     // cout << "b_vl: " << b_vl << "\tb_vr: " << b_vr << endl;
 
-    float lat = (b_vr*cos(theta_r) + b_v - b_vl*cos(theta_l))/2;
+    float lat = (b_vr*cos(angle_right) + b_v - b_vl*cos(angle_left))/2;
 
     // cout << "deviation: " <<  (theta_l+theta_r)/2 <<
     //       "\nl_lat left: " << b_v - b_vl*cos(theta_l) <<
     //       "\tl_lat right: " << b_vr*cos(theta_r);
+
     return lat;
 }
 
-float get_road_angle(vector<cv::Vec2f> side_lines) {
-    float theta_l = side_lines[0][1];
-    float theta_r = side_lines[1][1];
-    return (theta_l+theta_r)/2;
-}
+// float get_road_angle(vector<cv::Vec2f> side_lines) {
+//     float theta_l = side_lines[0][1];
+//     float theta_r = side_lines[1][1];
+//     return (theta_l+theta_r)/2;
+// }
 
 int get_stop_line_distance(cv::Vec2f stop_line, float image_w, float image_h) {
     float theta;
@@ -400,7 +401,7 @@ void prefilter(int& lateral_position, int pre_lateral_position, bool& is_down, b
     }
 }
 
-int image_process(cv::Mat& image, bool print_lines, float &lateral_position, float &road_angle, int &stop_distance) {
+int image_process(cv::Mat& image, bool print_lines, float &lateral_position, float &angle_left, float &angle_right, int &stop_distance) {
     cv::Mat edges, gray, gauss;
     vector<cv::Vec2f> lines, side_lines, stop_lines;
     vector<cv::Vec3f> circles;
@@ -431,8 +432,8 @@ int image_process(cv::Mat& image, bool print_lines, float &lateral_position, flo
     get_unique_lines(lines, 10, 58);
     classify_lines(lines, side_lines, stop_lines);
     if (side_lines.size() >= 2) {
-        lateral_position = get_lateral_position(side_lines, image_width, image_height);
-        road_angle = get_road_angle(side_lines);
+        lateral_position = get_lateral_position(side_lines, image_width, image_height, angle_left, angle_right);
+        // road_angle = get_road_angle(side_lines);
         // cout << "l_lat: " << lateral_position << endl;
     } else {
         return -1;

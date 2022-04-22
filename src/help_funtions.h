@@ -40,12 +40,12 @@ const float PI = 3.14159265359f;
     cv::Vec3f average_circle(std::vector<cv::Vec3f> circles);
     void get_unique_lines(std::vector<cv::Vec2f> &lines, float theta_margin, float rho_margin);
     std::vector<cv::Vec3f> get_unique_circles(std::vector<cv::Vec3f>& circles);
-    float get_lateral_position(std::vector<cv::Vec2f> side_lines, float image_w, float image_h);
-    float get_road_angle(std::vector<cv::Vec2f> side_lines);
+    float get_lateral_position(std::vector<cv::Vec2f> side_lines, float image_w, float image_h, float &angle_left, float &angle_right);
+    // float get_road_angle(std::vector<cv::Vec2f> side_lines);
     int get_stop_line_distance(cv::Vec2f stop_line, float image_w, float image_h);
 // public:
     void prefilter(int& lateral_position, int pre_lateral_position, bool& is_down, bool& is_up);
-    int image_process(cv::Mat& imput_image, bool print_lines, float &lateral_position, float &road_angle, int &stop_distance);
+    int image_process(cv::Mat& imput_image, bool print_lines, float &lateral_position, float &angle_left, float &angle_right, int &stop_distance);
 
 
 #endif  // SRC_HELP_FUNTIONS_H_

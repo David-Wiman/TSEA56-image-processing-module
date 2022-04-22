@@ -9,7 +9,9 @@ typedef struct image_processing_output {
     bool success = 0;
     float lateral_position = 0;
     int stop_distance = 0;
-    float road_angle = 0;
+    float angle_left = 0;
+    float angle_right = 0;
+
 } image_proc_t;
 
 class ImageProcessing {
@@ -24,11 +26,9 @@ class ImageProcessing {
     float lateral_model = 100;
     cv::VideoCapture video_capture;
     float P = 10;
-    cv::Mat transformation_matrix{};
-    cv::Mat mtx_matrix{};
-    cv::Mat dist_matrix{};
-    cv::Mat newcameramtx_matrix{};
 
+    cv::Mat mapx{};
+    cv::Mat mapy{};
     image_proc_t output{};
     cv::Mat frame{};
 };
