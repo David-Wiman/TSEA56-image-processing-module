@@ -56,20 +56,18 @@ subdirs: $(SUBDIRS)
 $(SUBDIRS):
 	$(MAKE) base -C $@
 
-## Link the main program
-#main: base $(OBJ_DIR)/$(MAINOBJ)
-	#$(CC_CPP) $(CPPFLAGS) -o $(OUTNAME) $(CPP_OBJS) $(C_OBJS) $(OBJ_DIR)/$(MAINOBJ) $(LDFLAGS)
-
 # Compile everything except mainfile
 base: $(OBJ_DIR) $(CPP_OBJS) $(C_OBJS) Makefile
 
 # Compile C++ objects
 $(CPP_OBJS) $(OBJ_DIR)/$(MAINOBJ): $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CC_CPP) $(CPPFLAGS) -c $< -o $@
+	@ echo Compiling $<
+	@ $(CC_CPP) $(CPPFLAGS) -c $< -o $@
 
 # Compile C objects
 $(C_OBJS): $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC_C) $(CFLAGS) -c $< -o $@
+	@ echo Compiling $<
+	@ $(CC_C) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR):
 	@ mkdir -p $(OBJ_DIR)
