@@ -14,18 +14,11 @@ ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv
     // video_capture.set(4, 100); // set frame size
     // video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
 
-    cv::Mat perspective_matrix = get_transform_mtx("perspective_matrix.txt", 3, 3);
-    cv::Mat mtx_matrix = get_transform_mtx("mtx.txt", 3, 3);
-    cv::Mat dist_matrix = get_transform_mtx("dist.txt", 1, 5);
-    cv::Mat newcameramtx_matrix = get_transform_mtx("newcameramtx.txt", 3, 3);
-
-    mapx = get_transform_mtx("mapx.txt", frame.size().width, frame.size().height);
-    mapy = get_transform_mtx("mapy.txt", frame.size().width, frame.size().height);
-
-    // cv::initUndistortRectifyMap(mtx_matrix, dist_matrix, cv::Mat(), (perspective_matrix * newcameramtx_matrix), cv::Size(frame.size().width, frame.size().height), CV_32FC1, mapx, mapy);
-
-    // transformation_matrix = perspective_transform_init();
-}
+    // mapx = get_transform_mtx("mapx.txt", frame.size().width, frame.size().height);
+    // mapy = get_transform_mtx("mapy.txt", frame.size().width, frame.size().height);
+    mapy = get_transform_mtx("./Matrices/mapy.txt", 640, 480);
+    mapx = get_transform_mtx("./Matrices/mapx.txt", 640, 480);
+    }
 
 ImageProcessing::~ImageProcessing() {
     video_capture.release();
@@ -45,13 +38,16 @@ image_proc_t ImageProcessing::process_next_frame() {
     video_capture.grab();
     video_capture.retrieve(frame);
 
+    cv::Mat frame2;
+
     // int pre_lateral = lateral_position;
     // perspective_transform(frame, transformation_matrix);
-    cv::remap(frame, frame, mapx, mapy, cv::INTER_LINEAR);
+    cv::remap(frame, frame2, mapx, mapy, cv::INTER_LINEAR);
 
-    int found_sidelines_success = image_process(frame, true, lateral_position, angle_left, angle_right, stop_distance);
+
+    int found_sidelines_success = image_process(frame2, true, lateral_position, angle_left, angle_right, stop_distance);
     if (visualize) {
-        cv::imshow("frame", frame);
+        cv::imshow("frame", frame2);
     }
 
     float lateral_diff = lateral_position - lateral_model;

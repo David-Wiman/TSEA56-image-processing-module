@@ -4,6 +4,8 @@ import cv2 as cv2
 import numpy as np
 import os
 import glob
+WIDTH = 640
+HEIGHT = 480
  
 # Defining the dimensions of checkerboard
 CHECKERBOARD = (5,8)
@@ -22,10 +24,11 @@ prev_img_shape = None
  
 # Extracting path of individual image stored in a given directory
 images = glob.glob('./images/*.jpg')
-for fname in images[0:5]:
+for fname in images:
     img = cv2.imread(fname)
-    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-
+    resized = cv2.resize(img, (WIDTH, HEIGHT), interpolation = cv2.INTER_AREA)
+    gray = cv2.cvtColor(resized,cv2.COLOR_BGR2GRAY)
+    print(gray.shape)
     chessboard_dim = (5, 8)
     found_all, corners = cv2.findChessboardCorners(img, chessboard_dim)
     cv2.drawChessboardCorners(img, chessboard_dim, corners, found_all)
@@ -49,42 +52,20 @@ for fname in images[0:5]:
         corners2 = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
          
         imgpoints.append(corners2)
-  
-h,w = img.shape[:2]
- 
+
 """
 Performing camera calibration by
 passing the value of known 3D points (objpoints)
 and corresponding pixel coordinates of the
 detected corners (imgpoints)
 """
-ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, (HEIGHT, WIDTH), None, None)
  
-# print("Camera matrix : \n")
-# print(mtx)
-# print("dist : \n")
-# print(dist)
-# print("rvecs : \n")
-# print(rvecs)
-# print("tvecs : \n")
-# print(tvecs)
-
-
-
-
 
 # Refining the camera matrix using parameters obtained by calibration
-newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (WIDTH, HEIGHT), 0.1, (WIDTH, HEIGHT))
  
-print("newcameramtx:")
-print(newcameramtx)
-print("roi")
-print(roi)
-
-
-
-# Camera matrix : 
-
+ # Camera matrix : 
 # [[1.51216159e+03 0.00000000e+00 1.18554956e+03]
 #  [0.00000000e+00 1.50860716e+03 8.21240275e+02]
 #  [0.00000000e+00 0.00000000e+00 1.00000000e+00]]
@@ -101,91 +82,38 @@ print(roi)
 
 
 
-with open('mtx.txt', 'w') as f:
-    for row in mtx:
-        f.write("%s %s %s\n" % (row[0], row[1], row[2]))
-f.close()
+mapx, mapy=cv2.initUndistortRectifyMap(mtx,dist,None, newcameramtx, (WIDTH, HEIGHT), 5)
 
-with open('dist.txt', 'w') as f:
-    for row in dist:
-        f.write("%s" % (row))
-f.close()
-
-with open('newcameramtx.txt', 'w') as f:
-    for row in newcameramtx:
-        f.write("%s %s %s\n" % (row[0], row[1], row[2]))
-f.close()
-
-# f = open('Camera_matrix.txt', 'r')
-# if f.mode=='r':
-#     contents= f.read()
-# # Method 1 to undistort the image
-# img = cv2.imread("images/save_as_filename.jpg")
-
-# dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
-# Method 2 to undistort the image
-
-
-
-mapx, mapy=cv2.initUndistortRectifyMap(mtx,dist,None, newcameramtx, (w,h), 5)
-
-# print("mapx: ", mapx.shape, "\nmapy: ", mapy.shape)
-print(mapx[0])
-
-
-file = open("Camera_matrix.txt", "w")
-str = repr(mapx)
-file.write("mapx = " + str + "\n")
-str = repr(mapy)
-file.write("mapy = " + str + "\n")
-file.close()
-
-
-img1 = cv2.imread("./images/before.jpg")
-img2 = cv2.imread("./Help_images/chessboard_2.png")
+img1 = cv2.imread("reference.jpg")
+img2 = cv2.imread("./Help_images/chessboard_ideal.png")
 img1 = cv2.remap(img1, mapx, mapy, cv2.INTER_LINEAR)
 cv2.imwrite("before_2.jpg", img1)
 
-
+# Find corners
 ret1, corners1 = cv2.findChessboardCorners(img1, (5, 8))
 ret2, corners2 = cv2.findChessboardCorners(img2, (5, 8))
-# print(corners1)
-# print(corners2)
 
+# Find ipm-transform
 H, _ = cv2.findHomography(corners1, corners2)
+# Calculate remap-coordinates
+mapx, mapy = cv2.initUndistortRectifyMap(mtx,dist,None, np.matmul(H, newcameramtx), (WIDTH, HEIGHT), 5)
 
-# print(H)
-with open('perspective_matrix.txt', 'w') as f:
-    for row in H:
-        f.write("%s %s %s\n" % (row[0], row[1], row[2]))
-f.close()
-
-
-mapx, mapy = cv2.initUndistortRectifyMap(mtx,dist,None, np.matmul(H, newcameramtx), (640, 480), 5)
-
-
-with open('mapx.txt', 'w') as f:
+with open('./Matrices/mapx.txt', 'w') as f:
     for row in mapx:
         for col in row:
             f.write("%s " % (col))
         f.write("\n")
 f.close()
 
-with open('mapy.txt', 'w') as f:
+with open('./Matrices/mapy.txt', 'w') as f:
     for row in mapy:
         for col in row:
             f.write("%s " % (col))
         f.write("\n")
 f.close()
 
-# img1 = cv2.imread("./images/before.jpg")
 
-# img1 = cv2.remap(img1, mapx, mapy, cv2.INTER_LINEAR)
-
-# out = cv2.warpPerspective(img1, H, (img1.shape[1], img1.shape[0]))
-# cv2.imwrite("combined.jpg", img1)
-
-# Displaying the undistorted image
-# cv2.imshow("undistorted image",dst)
-# cv2.waitKey(0)
-
+## Test matrix
+img3 = cv2.imread("reference.jpg")
+img3 = cv2.remap(img3, mapx, mapy, cv2.INTER_LINEAR)
+cv2.imwrite("combined_2.jpg", img3)

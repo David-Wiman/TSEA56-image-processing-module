@@ -15,18 +15,20 @@ using std::string;
 
 // ### Help functions
 cv::Mat get_transform_mtx(string src, int x, int y) {
-    std::ifstream fin(src);
-    int element;
-    cv::Mat matrix = cv::Mat(x,y, CV_64F);
+    std::ifstream in(src);
+    std::string element;
+    std::cin.rdbuf(in.rdbuf());
+    cv::Mat matrix = cv::Mat(y, x, CV_32FC1);
 
-    for (int i=0; i<x; i++) {
-        for (int j=0; j<y; j++){
-            fin >> element;
-            matrix.at<double>(i,j) = element;
+    for (int j=0; j<y; j++) {
+        for (int i=0; i<x; i++) {
+            std::cin >> element;
+            matrix.at<float>(j,i) = std::stof(element);
         }
     }
     return matrix;
 }
+
 
 void print_lines_on_image(vector<cv::Vec2f> lines, cv::Mat& image, cv::Scalar color = cv::Scalar(255, 100, 15)) {
     for (size_t i = 0; i < lines.size(); i++) {
@@ -407,23 +409,6 @@ int image_process(cv::Mat& image, bool print_lines, float &lateral_position, flo
     vector<cv::Vec3f> filted_circles;
     float image_height = static_cast<float>(image.size().height);
     float image_width = static_cast<float>(image.size().width);
-
-    // cv::cvtColor(image, gray, cv::COLOR_RGB2GRAY);
-
-    // cv::Mat dst, map1, map2,new_camera_matrix;
-    // cv::Size imageSize(cv::Size(image.cols,image.rows));
-    
-    // // Refining the camera matrix using parameters obtained by calibration
-    // new_camera_matrix = cv::getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, 1, imageSize, 0);
-    
-    // // Method 1 to undistort the image
-    // cv::undistort(image, dst, new_camera_matrix, distCoeffs, new_camera_matrix);
-    
-    // // Method 2 to undistort the image
-    // cv::initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(), new_camera_matrix, imageSize, CV_16SC2, map1, map2);
-    
-    // cv::remap(image, dst, map1, map2, cv::INTER_LINEAR);
-
 
     cv::GaussianBlur(image, gauss, cv::Size(3, 3), 0, 0);
     cv::Canny(gauss, edges, 50, 200, 3);
