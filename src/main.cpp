@@ -1,9 +1,10 @@
 #include "help_funtions.h"
 #include "image_processing.h"
+#include "log.h"
 
 using namespace std;
 
-    // ------------- FOR TESTING -----------------
+   // ------------- FOR TESTING -----------------
 void test() {
     // cv::Mat src = cv::imread(cv::samples::findFile("./ref_images_640_420/save_as_filename5.jpg"));
     // cv::Mat src = cv::imread(cv::samples::findFile("./Reference/Left_turn.png"));
@@ -37,8 +38,6 @@ void test() {
         image_proc_t return_values = image_process(frame2, true);
         cout<< return_values.status_code << " : " << return_values.lateral_position <<":"<< return_values.angle_left <<":"<< return_values.angle_right <<":"<< return_values.stop_distance<<endl;
         cv::imwrite("out.jpg", frame2);
-    
-
     }
     cout<<"end"<<endl;
 
@@ -50,6 +49,9 @@ void test() {
 int main() {
     // test();
     // -------------- FOR CAR -----------------
+
+    Logger::init();
+    image_proc_t proccesed_img{};
 
     ImageProcessing imageprocessor(false);
     while (true) {

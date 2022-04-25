@@ -7,7 +7,7 @@ CC_CPP = g++
 CC_C = gcc
 
 # Other include directories with headers
-INC := -isystem/usr/local/include/opencv4/
+INC := -isystem/usr/local/include/opencv4/ -isystemlogger/src
 
 # Compiling flags
 CPPFLAGS += -Wno-deprecated-declarations -Wall -Wextra -pedantic -Weffc++ -Wold-style-cast -Woverloaded-virtual -fmax-errors=3 -g
@@ -19,7 +19,6 @@ CFLAGS += $(INC)
 
 # Linking flags
 
-OPENCV = `pkg-config opencv4 --cflags --libs` -lopencv_core -lopencv_video
 OPENCV += -lopencv_core -lopencv_video -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio -lopencv_highgui
 LDFLAGS = $(OPENCV)
 
@@ -37,20 +36,38 @@ C_OBJS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(C_SRCS))
 ALL_OBJS := $(CPP_OBJS) $(C_OBJS) $(OBJ_DIR)/$(MAINOBJ)
 DEPS := $(patsubst %.o, %.d, $(ALL_OBJS))
 
-# Link the main program
-main: base $(OBJ_DIR)/$(MAINOBJ)
-	$(CC_CPP) $(CPPFLAGS) -o $(OUTNAME) $(CPP_OBJS) $(C_OBJS) $(OBJ_DIR)/$(MAINOBJ) $(LDFLAGS)
+# For handling recursive directories
+SUBDIRS := logger
+
+CCFLAGS += $(foreach d, $(SUBDIRS), -I$(d)/src)
+SUBDIR_OBJS = $(wildcard $(foreach d, $(SUBDIRS), $(d)/$(OBJ_DIR)/*.o))
+
+# Main objetice - created with 'make' or 'make main'.
+main: subdirs base $(OBJ_DIR)/$(MAINOBJ)
+	@ echo Linking main file
+	@ $(CC_CPP) $(CPPFLAGS) -o $(OUTNAME) \
+		$(CPP_OBJS) $(C_OBJS) $(OBJ_DIR)/$(MAINOBJ) $(SUBDIR_OBJS) $(LDFLAGS)
+	@ echo ""
+
+# Recursive make of subdirectories
+.PHONY: subdirs $(SUBDIRS)
+subdirs: $(SUBDIRS)
+
+$(SUBDIRS):
+	$(MAKE) base -C $@
 
 # Compile everything except mainfile
 base: $(OBJ_DIR) $(CPP_OBJS) $(C_OBJS) Makefile
 
 # Compile C++ objects
 $(CPP_OBJS) $(OBJ_DIR)/$(MAINOBJ): $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CC_CPP) $(CPPFLAGS) -c $< -o $@
+	@ echo Compiling $<
+	@ $(CC_CPP) $(CPPFLAGS) -c $< -o $@
 
 # Compile C objects
 $(C_OBJS): $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC_C) $(CFLAGS) -c $< -o $@
+	@ echo Compiling $<
+	@ $(CC_C) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR):
 	@ mkdir -p $(OBJ_DIR)
