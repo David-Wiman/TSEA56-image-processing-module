@@ -90,7 +90,6 @@ float circle_line_dist(cv::Vec3f circle, cv::Vec2f line) {
     float x = circle[0];
     float y = circle[1];
     float r = circle[2];
-
     float dist = abs(x*cos(theta) + y*sin(theta) + rho) - r;
 
     return dist;
@@ -188,9 +187,9 @@ void perspective_transform(cv::Mat& image, const cv::Mat& matrix) {
     return;
 }
 
-void kalman(float &P, float &x_model, float z, float R) {
+void kalman(float &P, float &x_model, int z, float R) {
     float K = P / (P+R);
-    x_model = x_model + K*(z-x_model);
+    x_model = x_model + K*(static_cast<float>(z)-x_model);
     P = (1-K)*P;
 }
 
@@ -331,12 +330,12 @@ vector<cv::Vec3f> get_unique_circles(vector<cv::Vec3f> circles) {
 }
 
 // ### Position calculation
-float get_lateral_position(vector<cv::Vec2f> side_lines, float image_w, float image_h, float &angle_left, float &angle_right) {
+image_proc_t get_lateral_position(vector<cv::Vec2f> &side_lines, float image_w, float image_h) {
     sort(side_lines.begin(), side_lines.end(), comp_rho_rev);
     float rho_l = side_lines[0][0];
-    angle_left = side_lines[0][1];
+    float angle_left = side_lines[0][1];
     float rho_r = side_lines[1][0];
-    angle_right = side_lines[1][1];
+    float angle_right = side_lines[1][1];
 
     // cout << "rho_l: " << rho_l << "\ttheta_l: " << theta_l << endl;
     // cout << "rho_r: " << rho_r << "\ttheta_r: "  << theta_r << endl;
@@ -350,20 +349,17 @@ float get_lateral_position(vector<cv::Vec2f> side_lines, float image_w, float im
     float b_vr = x_r - image_w/2;
     // cout << "b_vl: " << b_vl << "\tb_vr: " << b_vr << endl;
 
-    float lat = (b_vr*cos(angle_right) + b_v - b_vl*cos(angle_left))/2;
+    image_proc_t return_values{};
+    return_values.lateral_position = static_cast<int>(b_vr*cos(angle_right) + b_v - b_vl*cos(angle_left)/2);
 
     // cout << "deviation: " <<  (theta_l+theta_r)/2 <<
     //       "\nl_lat left: " << b_v - b_vl*cos(theta_l) <<
     //       "\tl_lat right: " << b_vr*cos(theta_r);
+    return_values.angle_left = static_cast<int>(180*angle_left/PI);
+    return_values.angle_right = static_cast<int>(180*angle_right/PI);
 
-    return lat;
+    return return_values;
 }
-
-// float get_road_angle(vector<cv::Vec2f> side_lines) {
-//     float theta_l = side_lines[0][1];
-//     float theta_r = side_lines[1][1];
-//     return (theta_l+theta_r)/2;
-// }
 
 int get_stop_line_distance(cv::Vec2f stop_line, float image_w, float image_h) {
     float theta;
@@ -402,26 +398,36 @@ void prefilter(int& lateral_position, int pre_lateral_position, bool& is_down, b
     }
 }
 
-int image_process(cv::Mat& image, bool print_lines, float &lateral_position, float &angle_left, float &angle_right, int &stop_distance) {
+image_proc_t image_process(cv::Mat& image, bool print_lines) {
     cv::Mat edges, gray, gauss;
     vector<cv::Vec2f> lines, side_lines, stop_lines;
     vector<cv::Vec3f> circles;
     vector<cv::Vec3f> filted_circles;
+    image_proc_t return_values{};
+    return_values.status_code = 2;
     float image_height = static_cast<float>(image.size().height);
     float image_width = static_cast<float>(image.size().width);
 
     cv::GaussianBlur(image, gauss, cv::Size(3, 3), 0, 0);
-    cv::Canny(gauss, edges, 50, 200, 3);
-    cv::HoughLines(edges, lines, 1, PI/180, 150, 0, 0);
+    cv::Canny(gauss, edges, 50, 150, 3);
+    cv::HoughLines(edges, lines, 1, PI/180, 100, 0, 0);
     get_unique_lines(lines, 10, 58);
     classify_lines(lines, side_lines, stop_lines);
     if (side_lines.size() >= 2) {
-        lateral_position = get_lateral_position(side_lines, image_width, image_height, angle_left, angle_right);
-        // road_angle = get_road_angle(side_lines);
-        // cout << "l_lat: " << lateral_position << endl;
+        return_values = get_lateral_position(side_lines, image_width, image_height);
+        return_values.status_code = 0;
+    } else if (side_lines.size() == 1) {
+        int angle = static_cast<int>(180*side_lines[0][1]/PI);
+
+        return_values.angle_left = angle;
+        return_values.angle_right = angle;
+        return_values.status_code = 1;
+
     } else {
-        return -1;
-    }
+        return_values.status_code = 2;
+        return return_values;
+    } 
+
     /*cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
                  edges.rows/16,  // Distance between unique circles
                  100, 30, 1, 30 // canny, center, min_r, max_r
@@ -437,14 +443,14 @@ int image_process(cv::Mat& image, bool print_lines, float &lateral_position, flo
     }
 
     if (stop_lines.size() != 0) {
-        stop_distance = get_stop_line_distance(stop_lines[0], image_width, image_height);
+        return_values.stop_distance = get_stop_line_distance(stop_lines[0], image_width, image_height);
         // cout << "l_s: " << stop_distance << endl;
         if (print_lines) {
             print_lines_on_image(stop_lines, gauss, cv::Scalar(0, 255, 0));
         }
     }
     image = gauss;
-    return 1;
+    return return_values;
 }
 
 

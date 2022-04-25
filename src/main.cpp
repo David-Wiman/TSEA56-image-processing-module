@@ -5,47 +5,56 @@ using namespace std;
 
     // ------------- FOR TESTING -----------------
 void test() {
-    float lateral_position;
-    float angle_left;
-    float angle_right;
-    int stop_distance;
-
     // cv::Mat src = cv::imread(cv::samples::findFile("./ref_images_640_420/save_as_filename5.jpg"));
     // cv::Mat src = cv::imread(cv::samples::findFile("./Reference/Left_turn.png"));
-    cv::Mat src = cv::imread(cv::samples::findFile("./Test_road/test.jpg"));
+    cv::Mat src = cv::imread(cv::samples::findFile("./Test_road/test3.jpg"));
     cv::resize(src, src, cv::Size(640, 480));
 
     cv::Mat frame2;
     cv::Mat mapy = get_transform_mtx("./Matrices/mapy.txt", 640, 480);
     cv::Mat mapx = get_transform_mtx("./Matrices/mapx.txt", 640, 480);
-    cout<<"start"<<endl;
-    cv::Mat src_out;
+    cv::Mat canny;
 
-    cv::remap(src, src, mapx, mapy, cv::INTER_LINEAR, cv::BORDER_REPLICATE);
+    // cv::remap(src, src, mapx, mapy, cv::INTER_LINEAR, cv::BORDER_REPLICATE);
     // BORDER_CONSTANT BORDER_REPLICATE BORDER_REFLECT BORDER_WRAP BORDER_REFLECT_101 BORDER_TRANSPARENT 
 
     cv::Mat mask = cv::imread(cv::samples::findFile("mask.png"));
     src = src + mask;
     // src.setTo(cv::Scalar(255, 255, 255), mask);
-    // cv::Canny(src, src_out, 50, 200, 3);
-    image_process(src, true, lateral_position, angle_left, angle_right, stop_distance);
+    cv::VideoCapture video_capture(0);
+    cv::Mat frame{};
+    cout<<"start"<<endl;
 
-    cout<<lateral_position <<":"<< angle_left <<":"<< angle_right <<":"<< stop_distance<<endl;
-    cv::imwrite("out.jpg", src);
+    while (true) {
+        video_capture.read(frame);
+
+        cv::remap(frame, frame2, mapx, mapy, cv::INTER_LINEAR, cv::BORDER_REPLICATE);
+        frame2 = frame2 + mask;
+
+        cv::Canny(frame2, canny, 50, 200, 3);
+        cv::imwrite("canny.jpg", canny);
+
+        image_proc_t return_values = image_process(frame2, true);
+        cout<< return_values.status_code << " : " << return_values.lateral_position <<":"<< return_values.angle_left <<":"<< return_values.angle_right <<":"<< return_values.stop_distance<<endl;
+        cv::imwrite("out.jpg", frame2);
+    
+
+    }
+    cout<<"end"<<endl;
+
+
 }
     // -------------- END TEST ---------------------
 
 
 int main() {
-    test();
+    // test();
     // -------------- FOR CAR -----------------
 
-    // ImageProcessing imageprocessor(false);
-    // while (true) {
-    //     proccesed_img = imageprocessor.process_next_frame();
-    //     if (cv::waitKey(10) > 0) break;
-    // }
-    // imageprocessor.~ImageProcessing();
-
+    ImageProcessing imageprocessor(false);
+    while (true) {
+        imageprocessor.process_next_frame();
+        if (cv::waitKey(10) > 0) break;
+    }
     // -------------- END CAR ---------------
 }

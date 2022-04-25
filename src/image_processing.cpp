@@ -12,10 +12,10 @@ ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv
     // video_capture.set(4, 100); // set frame size
     // video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
 
-    // mapx = get_transform_mtx("mapx.txt", frame.size().width, frame.size().height);
-    // mapy = get_transform_mtx("mapy.txt", frame.size().width, frame.size().height);
     mapy = get_transform_mtx("./Matrices/mapy.txt", 640, 480);
     mapx = get_transform_mtx("./Matrices/mapx.txt", 640, 480);
+    mask = cv::imread(cv::samples::findFile("mask.png"));
+
     }
 
 ImageProcessing::~ImageProcessing() {
@@ -24,47 +24,38 @@ ImageProcessing::~ImageProcessing() {
 }
 
 image_proc_t ImageProcessing::process_next_frame() {
-    int stop_distance = 0;
-    float angle_right = 0;
-    float angle_left = 0;
-    float lateral_position = 0;
-    const int R = 10;  // Mesunet noise
+    const int R = 10;  // Measurement noise
     const float Q = 10;  // Process noise
-
+    cv::Mat frame{};
+    cv::Mat frame2;
+    image_proc_t output{};
     // Get next frame
     video_capture.read(frame);
 
 
-    cv::Mat frame2;
-
     // int pre_lateral = lateral_position;
     // perspective_transform(frame, transformation_matrix);
     cv::remap(frame, frame2, mapx, mapy, cv::INTER_LINEAR);
-    cv::Mat mask = cv::imread(cv::samples::findFile("mask.png"));
     // Remove inaccurate pixels in botton corners from fisheye+ipm with a mask
     frame2 = frame2 + mask;
 
     // Find lines and calculate angles and distances
-    int found_sidelines_success = image_process(frame2, true, lateral_position, angle_left, angle_right, stop_distance);
+    output = image_process(frame2, true);
+
     if (visualize) {
         cv::imshow("frame", frame2);
     }
-
-    float lateral_diff = lateral_position - lateral_model;
-    if (found_sidelines_success != 1 || abs(lateral_diff) > 100) {
+    std::cout<<output.lateral_position<<" : "<<lateral_model<<std::endl;
+    int lateral_diff = output.lateral_position - static_cast<int>(lateral_model);
+    if (output.status_code != 0 || abs(lateral_diff) > 100) {
         std::cout << "No sidelines" << std::endl;
-        output.success = false;
+        output.status_code = 2;
         return output;
     } else {
-        kalman(P, lateral_model, lateral_position, R);
+        kalman(P, lateral_model, output.lateral_position, R);
         P = P + Q;
-        std::cout << "lat:" << lateral_model <<", right angle:" << angle_right <<", left angle:" << angle_left << ", stop:" << stop_distance << std::endl;
     }
-    output.success = true;
-    output.angle_right = angle_right;
-    output.angle_left = angle_left;
-    output.lateral_position = lateral_model;
-    output.stop_distance = stop_distance;
+    std::cout<< output.status_code << " : " << output.lateral_position <<":"<< output.angle_left <<":"<< output.angle_right <<":"<< output.stop_distance<<std::endl;
 
     return output;
 }
