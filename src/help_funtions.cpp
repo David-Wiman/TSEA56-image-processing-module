@@ -30,7 +30,7 @@ cv::Mat get_transform_mtx(string src, int x, int y) {
 }
 
 
-void print_lines_on_image(vector<cv::Vec2f> lines, cv::Mat& image, cv::Scalar color = cv::Scalar(255, 100, 15)) {
+void print_lines_on_image(vector<cv::Vec2f> const &lines, cv::Mat& image, cv::Scalar color = cv::Scalar(255, 100, 15)) {
     for (size_t i = 0; i < lines.size(); i++) {
         float rho = lines[i][0];
         float theta = lines[i][1];
@@ -69,14 +69,14 @@ cv::Mat print_circles_on_image(vector<cv::Vec3f> circles, cv::Mat& image) {
     return image;
 }
 
-bool comp_rho(cv::Vec2f line1, cv::Vec2f line2) {
+bool comp_rho(cv::Vec2f const & line1, cv::Vec2f const &line2) {
     return line1[0] > line2[0];
 }
-bool comp_rho_rev(cv::Vec2f line1, cv::Vec2f line2) {
+bool comp_rho_rev(cv::Vec2f const &line1, cv::Vec2f const &line2) {
     return line1[0] < line2[0];
 }
 
-float angle_difference(float angle_1, float angle_2) {
+float angle_difference(float const angle_1, float const angle_2) {
     float diff = fmod(abs(angle_1 - angle_2), PI);
     if (diff > PI/2) {
         diff = PI - diff;
@@ -116,29 +116,29 @@ bool circle_between_lines(cv::Vec2f line1, cv::Vec2f line2, cv::Vec3f circle) {
     return rho_l < rho && rho < 1*rho_r;
 }
 
-float line_vertical_deviation(cv::Vec2f line) {
+float line_vertical_deviation(cv::Vec2f const &line) {
     float dev = angle_difference(line[1], 0);
     return dev;
 }
 
-bool line_is_horizontal(cv::Vec2f line) {
+bool line_is_horizontal(cv::Vec2f const & line) {
     return angle_difference(line[1], PI/2) < 20*PI/180;
 }
 
-bool lines_parallell(cv::Vec2f line_1, cv::Vec2f line_2) {
+bool lines_parallell(cv::Vec2f const &line_1, cv::Vec2f const &line_2) {
     return abs(angle_difference(line_1[1], line_2[1])) < 20*PI/180;
 }
 
-bool  lines_perpendicular(cv::Vec2f line_1, cv::Vec2f line_2) {
+bool lines_perpendicular(cv::Vec2f const &line_1, cv::Vec2f const &line_2) {
     return abs(angle_difference(line_1[1], line_2[1]) - PI/2) < 20*PI/180;
 }
 
-float get_rho(cv::Vec2f line) {
+float get_rho(cv::Vec2f const &line) {
     float rho = abs(line[0]);
     return rho;
 }
 
-void classify_lines(vector<cv::Vec2f> lines, vector<cv::Vec2f> &side_lines, vector<cv::Vec2f> &stop_lines) {
+void classify_lines(vector<cv::Vec2f> &lines, vector<cv::Vec2f> &side_lines, vector<cv::Vec2f> &stop_lines) {
     if (lines.size() == 1) {
         side_lines = lines;
         return;
@@ -179,7 +179,7 @@ cv::Mat perspective_transform_init() {
     return matrix;
 }
 
-void perspective_transform(cv::Mat& image, const cv::Mat& matrix) {
+void perspective_transform(cv::Mat& image, cv::Mat const &matrix) {
     // cv::Mat ipm;
     cv::Size size(image.size().width, image.size().height);
     cv::Scalar value(255, 255, 255);
@@ -193,7 +193,7 @@ void kalman(float &P, float &x_model, int z, float R) {
     P = (1-K)*P;
 }
 
-float average_rho(vector<cv::Vec2f> lines) {
+float average_rho(vector<cv::Vec2f> const &lines) {
     float sum = 0;
     for (unsigned int i=0; i < lines.size(); i++) {
         sum += lines[i][0];
@@ -201,7 +201,7 @@ float average_rho(vector<cv::Vec2f> lines) {
     return sum/static_cast<float>(lines.size());
 }
 
-float average_circle_coord(vector<cv::Vec3f> lines, int position) {
+float average_circle_coord(vector<cv::Vec3f> const &lines, int position) {
     float sum = 0;
     for (unsigned int i=0; i < lines.size(); i++) {
         sum += lines[i][position];
@@ -210,7 +210,7 @@ float average_circle_coord(vector<cv::Vec3f> lines, int position) {
 }
 
 
-float average_theta(vector<cv::Vec2f> lines) {
+float average_theta(vector<cv::Vec2f> const &lines) {
     float x = 0, y = 0;
     for (unsigned int i=0; i < lines.size(); i++) {
         x += cos(lines[i][1]);
@@ -219,7 +219,7 @@ float average_theta(vector<cv::Vec2f> lines) {
     return atan2(y, x);
 }
 
-cv::Vec2f average_line(vector<cv::Vec2f> lines) {
+cv::Vec2f average_line(vector<cv::Vec2f> const &lines) {
     cv::Vec2f line;
     float x = 0, y = 0;
     for (unsigned int i=0; i < lines.size(); i++) {
@@ -232,7 +232,7 @@ cv::Vec2f average_line(vector<cv::Vec2f> lines) {
     return line;
 }
 
-cv::Vec3f average_circle(vector<cv::Vec3f> circles) {
+cv::Vec3f average_circle(vector<cv::Vec3f> const &circles) {
     cv::Vec3f circle;
     float size = static_cast<float>(circles.size());
     for (unsigned int i=0; i < circles.size(); i++) {
@@ -361,11 +361,9 @@ image_proc_t get_lateral_position(vector<cv::Vec2f> &side_lines, float image_w, 
     return return_values;
 }
 
-int get_stop_line_distance(cv::Vec2f stop_line, float image_w, float image_h) {
-    float theta;
-    float rho;
-    rho = stop_line[0];
-    theta = stop_line[1];
+int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float image_h) {
+    float rho = stop_line[0];
+    float theta = stop_line[1];
     return cvRound(image_h*sin(theta) + image_w/2*cos(theta) - rho);
 }
 
