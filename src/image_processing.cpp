@@ -42,7 +42,7 @@ image_proc_t ImageProcessing::process_next_frame() {
     cv::remap(frame, frame2, mapx, mapy, cv::INTER_LINEAR);
     cv::Mat mask = cv::imread(cv::samples::findFile("mask.png"));
     // Remove inaccurate pixels in botton corners from fisheye+ipm with a mask
-    src = src + mask;
+    frame2 = frame2 + mask;
 
     // Find lines and calculate angles and distances
     int found_sidelines_success = image_process(frame2, true, lateral_position, angle_left, angle_right, stop_distance);
