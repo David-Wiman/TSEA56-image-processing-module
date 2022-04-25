@@ -5,7 +5,7 @@
 #ifndef IMAGE_PROCESSING_H
 #define IMAGE_PROCESSING_H
 
-typedef struct image_processing_output {
+typedef struct image_proc_t {
     bool success = 0;
     float lateral_position = 0;
     int stop_distance = 0;

@@ -33,7 +33,6 @@ image_proc_t ImageProcessing::process_next_frame() {
     const int R = 10;  // Mesunet noise
     const float Q = 10;  // Process noise
 
-
     // Get next frame
     video_capture.grab();
     video_capture.retrieve(frame);
@@ -43,8 +42,11 @@ image_proc_t ImageProcessing::process_next_frame() {
     // int pre_lateral = lateral_position;
     // perspective_transform(frame, transformation_matrix);
     cv::remap(frame, frame2, mapx, mapy, cv::INTER_LINEAR);
+    cv::Mat mask = cv::imread(cv::samples::findFile("mask.png"));
+    // Remove inaccurate pixels in botton corners from fisheye+ipm with a mask
+    src = src + mask;
 
-
+    // Find lines and calculate angles and distances
     int found_sidelines_success = image_process(frame2, true, lateral_position, angle_left, angle_right, stop_distance);
     if (visualize) {
         cv::imshow("frame", frame2);

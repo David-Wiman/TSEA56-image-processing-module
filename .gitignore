@@ -1,3 +1,8 @@
 build
 *.out
 .vscode/
+640_480.jpg
+combined.jpg
+combined_2.jpg
+hough4.py
+out.jpg
