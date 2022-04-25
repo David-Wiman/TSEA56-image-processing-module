@@ -49,10 +49,8 @@ cv::Vec3f average_circle(std::vector<cv::Vec3f> const &circles);
 void get_unique_lines(std::vector<cv::Vec2f> &lines, float theta_margin, float rho_margin);
 std::vector<cv::Vec3f> get_unique_circles(std::vector<cv::Vec3f>& circles);
 image_proc_t get_lateral_position(std::vector<cv::Vec2f> &side_lines, float image_w, float image_h);
-// float get_road_angle(std::vector<cv::Vec2f> side_lines);
 int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float image_h);
 // public:
-// void prefilter(int& lateral_position, int pre_lateral_position, bool& is_down, bool& is_up);
 image_proc_t image_process(cv::Mat& imput_image, bool print_lines);
 
 

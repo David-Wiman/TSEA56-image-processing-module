@@ -7,7 +7,6 @@ ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv
         std::cerr << "ERROR! Unable to open camera\n";
         return;
     }
-
     // video_capture.set(3, 180); // set frame size
     // video_capture.set(4, 100); // set frame size
     // video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
@@ -15,7 +14,6 @@ ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv
     mapy = get_transform_mtx("./Matrices/mapy.txt", 640, 480);
     mapx = get_transform_mtx("./Matrices/mapx.txt", 640, 480);
     mask = cv::imread(cv::samples::findFile("mask.png"));
-
     }
 
 ImageProcessing::~ImageProcessing() {
@@ -33,8 +31,6 @@ image_proc_t ImageProcessing::process_next_frame() {
     video_capture.read(frame);
 
 
-    // int pre_lateral = lateral_position;
-    // perspective_transform(frame, transformation_matrix);
     cv::remap(frame, frame2, mapx, mapy, cv::INTER_LINEAR);
     // Remove inaccurate pixels in botton corners from fisheye+ipm with a mask
     frame2 = frame2 + mask;
@@ -45,7 +41,7 @@ image_proc_t ImageProcessing::process_next_frame() {
     if (visualize) {
         cv::imshow("frame", frame2);
     }
-    std::cout<<output.lateral_position<<" : "<<lateral_model<<std::endl;
+    
     int lateral_diff = output.lateral_position - static_cast<int>(lateral_model);
     if (output.status_code != 0 || abs(lateral_diff) > 100) {
         std::cout << "No sidelines" << std::endl;
@@ -56,7 +52,6 @@ image_proc_t ImageProcessing::process_next_frame() {
         P = P + Q;
     }
     std::cout<< output.status_code << " : " << output.lateral_position <<":"<< output.angle_left <<":"<< output.angle_right <<":"<< output.stop_distance<<std::endl;
-
     return output;
 }
 

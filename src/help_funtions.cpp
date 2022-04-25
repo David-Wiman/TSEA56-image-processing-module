@@ -5,8 +5,6 @@
 
 #include "help_funtions.h"
 
-#define MIN_INT -5000;
-// using namespace std;
 using std::cout;
 using std::endl;
 using std::vector;
@@ -91,7 +89,6 @@ float circle_line_dist(cv::Vec3f circle, cv::Vec2f line) {
     float y = circle[1];
     float r = circle[2];
     float dist = abs(x*cos(theta) + y*sin(theta) + rho) - r;
-
     return dist;
 }
 
@@ -180,7 +177,6 @@ cv::Mat perspective_transform_init() {
 }
 
 void perspective_transform(cv::Mat& image, cv::Mat const &matrix) {
-    // cv::Mat ipm;
     cv::Size size(image.size().width, image.size().height);
     cv::Scalar value(255, 255, 255);
     warpPerspective(image, image, matrix, size, cv::INTER_LINEAR, cv::BORDER_CONSTANT, value);
@@ -365,35 +361,6 @@ int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float imag
     float rho = stop_line[0];
     float theta = stop_line[1];
     return cvRound(image_h*sin(theta) + image_w/2*cos(theta) - rho);
-}
-
-void prefilter(int& lateral_position, int pre_lateral_position, bool& is_down, bool& is_up) {
-    if (lateral_position == INT_MIN) {
-        cout << "No sidelines found/n";
-        return;
-    }
-    int lateral_diff = lateral_position - pre_lateral_position;
-    // cout << mesument_diff << endl;
-    if (is_down) {
-        if (lateral_diff  > 100) {
-            is_down = false;
-        } else {
-            lateral_position += lateral_diff;
-        }
-    } else if (is_up) {
-        if (lateral_diff  < 100) {
-            is_up = false;
-        } else {
-            lateral_position += lateral_diff;
-        }
-    } else if (lateral_diff < -100) {
-        is_down = true;
-
-    } else if (lateral_diff > 100) {
-        is_up = true;
-    } else {
-         cout << "something wrong with prefilter/n";
-    }
 }
 
 image_proc_t image_process(cv::Mat& image, bool print_lines) {
