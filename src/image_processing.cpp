@@ -7,8 +7,6 @@ ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv
         std::cerr << "ERROR! Unable to open camera\n";
         return;
     }
-    video_capture.grab();
-    video_capture.retrieve(frame);
 
     // video_capture.set(3, 180); // set frame size
     // video_capture.set(4, 100); // set frame size
@@ -34,8 +32,8 @@ image_proc_t ImageProcessing::process_next_frame() {
     const float Q = 10;  // Process noise
 
     // Get next frame
-    video_capture.grab();
-    video_capture.retrieve(frame);
+    video_capture.read(frame);
+
 
     cv::Mat frame2;
 
