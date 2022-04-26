@@ -6,8 +6,7 @@
 #define IMAGE_PROCESSING_H
 
 #include "help_funtions.h"
-
-
+#include "raspi_common.h"
 
 class ImageProcessing {
  public:
