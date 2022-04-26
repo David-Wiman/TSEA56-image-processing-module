@@ -1,3 +1,6 @@
 [submodule "logger"]
 	path = logger
 	url = git@gitlab.liu.se:da-proj/TSEA56/2022/G08/logger.git
+[submodule "common"]
+	path = common
+	url = git@gitlab.liu.se:da-proj/TSEA56/2022/G08/common.git
