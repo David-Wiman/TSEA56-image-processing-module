@@ -413,6 +413,8 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
         if (print_lines) {
             print_lines_on_image(stop_lines, gauss, cv::Scalar(0, 255, 0));
         }
+    } else {
+        return_values.stop_distance = -1;
     }
     image = gauss;
     return return_values;
