@@ -11,14 +11,14 @@ ImageProcessing::ImageProcessing(std::string path_name, const bool vl)
         Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
         return;
     }
-    // video_capture.set(3, 180); // set frame size
-    // video_capture.set(4, 100); // set frame size
+    video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320); // set frame size
+    video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240); // set frame size
     // video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
 
-    mapy = get_transform_mtx(std::string{path_root + "/Matrices/mapy.txt"}, 640, 480);
-    mapx = get_transform_mtx(std::string{path_root + "/Matrices/mapx.txt"}, 640, 480);
+    mapy = get_transform_mtx(std::string{path_root + "/Matrices/mapy.txt"}, 320, 240);
+    mapx = get_transform_mtx(std::string{path_root + "/Matrices/mapx.txt"}, 320, 240);
     mask = cv::imread(cv::samples::findFile(std::string{path_root + "mask.png"}));
-    }
+}
 
 ImageProcessing::~ImageProcessing() {
     video_capture.release();
@@ -45,7 +45,11 @@ image_proc_t ImageProcessing::process_next_frame() {
     if (visualize) {
         cv::imshow("frame", frame2);
     }
-    
+    std::cout<< output.status_code << " : " << lateral_model <<" : "<< output.angle_left <<" : "<< output.angle_right <<" : "<< output.stop_distance<<std::endl;
+
+if (lateral_model == 1000) {
+    lateral_model = output.lateral_position;
+}
     int lateral_diff = output.lateral_position - static_cast<int>(lateral_model);
     if (output.status_code != 0 || abs(lateral_diff) > 100) {
         std::cout << "No sidelines" << std::endl;
@@ -55,7 +59,7 @@ image_proc_t ImageProcessing::process_next_frame() {
         kalman(P, lateral_model, output.lateral_position, R);
         P = P + Q;
     }
-    std::cout<< output.status_code << " : " << output.lateral_position <<":"<< output.angle_left <<":"<< output.angle_right <<":"<< output.stop_distance<<std::endl;
+    std::cout<< output.status_code << " : " << lateral_model <<" : "<< output.angle_left <<" : "<< output.angle_right <<" : "<< output.stop_distance<<std::endl;
     return output;
 }
 

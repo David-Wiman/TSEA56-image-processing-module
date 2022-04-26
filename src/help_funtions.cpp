@@ -374,7 +374,7 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     float image_width = static_cast<float>(image.size().width);
 
     cv::GaussianBlur(image, gauss, cv::Size(3, 3), 0, 0);
-    cv::Canny(gauss, edges, 50, 150, 3);
+    cv::Canny(gauss, edges, 80, 240, 3);
     cv::HoughLines(edges, lines, 1, PI/180, 100, 0, 0);
     get_unique_lines(lines, 10, 58);
     classify_lines(lines, side_lines, stop_lines);
