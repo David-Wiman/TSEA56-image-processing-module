@@ -9,13 +9,14 @@
 #include "raspi_common.h"
 
 class ImageProcessing {
- public:
-    explicit ImageProcessing(const bool visualize);
+public:
+    explicit ImageProcessing(std::string path_root, const bool visualize);
     ~ImageProcessing();
 
     image_proc_t process_next_frame();
 
- private:
+private:
+    std::string path_root;
     bool const visualize;
     float lateral_model = 300;
     cv::VideoCapture video_capture;

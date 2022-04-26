@@ -2,7 +2,10 @@
 #include "help_funtions.h"
 #include "log.h"
 
-ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv::CAP_ANY} {
+#include <string>
+
+ImageProcessing::ImageProcessing(std::string path_name, const bool vl)
+: path_root{path_name}, visualize{vl}, video_capture{cv::CAP_ANY} {
     // Check if we succeeded to open video capture
     if (!video_capture.isOpened()) {
         Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
@@ -12,9 +15,9 @@ ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv
     // video_capture.set(4, 100); // set frame size
     // video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
 
-    mapy = get_transform_mtx("./Matrices/mapy.txt", 640, 480);
-    mapx = get_transform_mtx("./Matrices/mapx.txt", 640, 480);
-    mask = cv::imread(cv::samples::findFile("mask.png"));
+    mapy = get_transform_mtx(std::string{path_root + "/Matrices/mapy.txt"}, 640, 480);
+    mapx = get_transform_mtx(std::string{path_root + "/Matrices/mapx.txt"}, 640, 480);
+    mask = cv::imread(cv::samples::findFile(std::string{path_root + "mask.png"}));
     }
 
 ImageProcessing::~ImageProcessing() {

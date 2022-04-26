@@ -53,10 +53,10 @@ int main() {
     Logger::init();
     image_proc_t proccesed_img{};
 
-    ImageProcessing imageprocessor(false);
-    while (true) {
-        imageprocessor.process_next_frame();
-        if (cv::waitKey(10) > 0) break;
-    }
+    ImageProcessing imageprocessor("./", false);
+    //while (true) {
+        //imageprocessor.process_next_frame();
+        //if (cv::waitKey(10) > 0) break;
+    //}
     // -------------- END CAR ---------------
 }
