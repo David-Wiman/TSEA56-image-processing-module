@@ -3,8 +3,8 @@
 import cv2 as cv2
 import numpy as np
 import glob
-WIDTH = 640
-HEIGHT = 480
+WIDTH = 320
+HEIGHT = 240
 
 # Defining the dimensions of checkerboard
 CHECKERBOARD = (5, 8)
@@ -22,7 +22,7 @@ objp[0, :, :2] = np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1, 2)
 prev_img_shape = None
 
 # Extracting path of individual image stored in a given directory
-images = glob.glob('./calibration_640_420/*.jpg')
+images = glob.glob('./calibration_320_240/*.jpg')
 # images = glob.glob('./images/*.jpg')
 # WIDTH = 2592
 # HEIGHT = 1944
@@ -61,8 +61,8 @@ ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, (HEIGHT
 newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (WIDTH, HEIGHT), 0.1, (WIDTH, HEIGHT))
 mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (WIDTH, HEIGHT), 5)
 
-img1 = cv2.imread("./calibration_640_420/reference.jpg")
-img2 = cv2.imread("./Chessboard_ideal/chessboard_640_480.png")
+img1 = cv2.imread("./calibration_320_240/reference.jpg")
+img2 = cv2.imread("./Chessboard_ideal/chessboard_320_240.png")
 img1 = cv2.remap(img1, mapx, mapy, cv2.INTER_LINEAR)
 
 # Find corners
@@ -99,6 +99,6 @@ f.close()
 
 
 ## Test matrix
-img3 = cv2.imread("./calibration_640_420/reference.jpg")
+img3 = cv2.imread("./calibration_320_240/reference.jpg")
 img3 = cv2.remap(img3, mapx, mapy, cv2.INTER_LINEAR)
 cv2.imwrite("combined_2.jpg", img3)
