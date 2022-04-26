@@ -18,7 +18,7 @@ class ImageProcessing {
 
  private:
     bool const visualize;
-    float lateral_model = 300;
+    float lateral_model = 1000;
     cv::VideoCapture video_capture;
     float P = 10;
 
