@@ -6,8 +6,7 @@
 #define IMAGE_PROCESSING_H
 
 #include "help_funtions.h"
-
-
+#include "raspi_common.h"
 
 class ImageProcessing {
  public:
@@ -18,7 +17,7 @@ class ImageProcessing {
 
  private:
     bool const visualize;
-    float lateral_model = 300;
+    float lateral_model = 1000;
     cv::VideoCapture video_capture;
     float P = 10;
 

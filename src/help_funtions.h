@@ -1,6 +1,7 @@
 #ifndef SRC_HELP_FUNTIONS_H_
 #define SRC_HELP_FUNTIONS_H_
 
+#include "raspi_common.h"
 
 #include <iostream>
 #include <fstream>
@@ -10,17 +11,6 @@
 
 const float PI = 3.14159265359f;
 
-typedef struct image_proc_t {
-    bool status_code = 0;
-    int lateral_position = 0;
-    int stop_distance = 0;
-    int angle_left = 0;
-    int angle_right = 0;
-
-} image_proc_t;
-
-
-// private:
 cv::Mat get_transform_mtx(std::string src, int x, int y);
 void print_lines_on_image(std::vector<cv::Vec2f> const & lines, cv::Mat& image, cv::Scalar color);
 void remove_negative_rho(std::vector<cv::Vec2f>& lines);
@@ -50,7 +40,7 @@ void get_unique_lines(std::vector<cv::Vec2f> &lines, float theta_margin, float r
 std::vector<cv::Vec3f> get_unique_circles(std::vector<cv::Vec3f>& circles);
 image_proc_t get_lateral_position(std::vector<cv::Vec2f> &side_lines, float image_w, float image_h);
 int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float image_h);
-// public:
+
 image_proc_t image_process(cv::Mat& imput_image, bool print_lines);
 
 
