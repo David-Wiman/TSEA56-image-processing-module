@@ -373,9 +373,10 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     float image_height = static_cast<float>(image.size().height);
     float image_width = static_cast<float>(image.size().width);
 
-    cv::GaussianBlur(image, gauss, cv::Size(3, 3), 0, 0);
-    cv::Canny(gauss, edges, 80, 240, 3);
-    cv::HoughLines(edges, lines, 1, PI/180, 100, 0, 0);
+    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+    cv::GaussianBlur(gray, gauss, cv::Size(3, 3), 0, 0);
+    cv::Canny(gauss, edges, 80, 120, 3);
+    cv::HoughLines(edges, lines, 1, PI/180, 70, 0, 0);
     get_unique_lines(lines, 10, 58);
     classify_lines(lines, side_lines, stop_lines);
     if (side_lines.size() >= 2) {
