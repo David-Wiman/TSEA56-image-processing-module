@@ -59,11 +59,11 @@ void test() {
 
 
 int main() {
-    test();
+    // test();
     // -------------- FOR CAR -----------------
 
-    // Logger::init();
-    // image_proc_t proccesed_img{};
+    Logger::init(true);
+    image_proc_t proccesed_img{};
 
     ImageProcessing imageprocessor("./", false);
     while (true) {

@@ -59,6 +59,7 @@ if (lateral_model == 1000) {
         kalman(P, lateral_model, output.lateral_position, R);
         P = P + Q;
     }
+    Logger::log_img_data(output);
     std::cout<< output.status_code << " : " << lateral_model <<" : "<< output.angle_left <<" : "<< output.angle_right <<" : "<< output.stop_distance<<std::endl;
     return output;
 }
