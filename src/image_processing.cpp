@@ -2,7 +2,10 @@
 #include "help_funtions.h"
 #include "log.h"
 
-ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv::CAP_ANY} {
+#include <string>
+
+ImageProcessing::ImageProcessing(std::string path_name, const bool vl)
+: path_root{path_name}, visualize{vl}, video_capture{cv::CAP_ANY} {
     // Check if we succeeded to open video capture
     if (!video_capture.isOpened()) {
         Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
@@ -12,10 +15,10 @@ ImageProcessing::ImageProcessing(const bool vl) :visualize{vl}, video_capture{cv
     video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240); // set frame size
     // video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
 
-    mapy = get_transform_mtx("./Matrices/mapy.txt", 320, 240);
-    mapx = get_transform_mtx("./Matrices/mapx.txt", 320, 240);
-    mask = cv::imread(cv::samples::findFile("mask.png"));
-    }
+    mapy = get_transform_mtx(std::string{path_root + "/Matrices/mapy.txt"}, 320, 240);
+    mapx = get_transform_mtx(std::string{path_root + "/Matrices/mapx.txt"}, 320, 240);
+    mask = cv::imread(cv::samples::findFile(std::string{path_root + "mask.png"}));
+}
 
 ImageProcessing::~ImageProcessing() {
     video_capture.release();
@@ -56,6 +59,7 @@ if (lateral_model == 1000) {
         kalman(P, lateral_model, output.lateral_position, R);
         P = P + Q;
     }
+    Logger::log_img_data(output);
     std::cout<< output.status_code << " : " << lateral_model <<" : "<< output.angle_left <<" : "<< output.angle_right <<" : "<< output.stop_distance<<std::endl;
     return output;
 }
