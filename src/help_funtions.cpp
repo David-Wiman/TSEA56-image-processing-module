@@ -417,6 +417,11 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     } else {
         return_values.stop_distance = -1;
     }
+    // change value to -1 if distance is zero.
+    // possibly debug why zero.
+    if (return_values.stop_distance == 0) {
+        return_values.stop_distance = -1;
+    }
     image = gauss;
     return return_values;
 }

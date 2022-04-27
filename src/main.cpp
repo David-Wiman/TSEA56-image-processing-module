@@ -62,7 +62,7 @@ int main() {
     // test();
     // -------------- FOR CAR -----------------
 
-    Logger::init();
+    Logger::init(true);
     image_proc_t proccesed_img{};
 
     ImageProcessing imageprocessor("./", false);

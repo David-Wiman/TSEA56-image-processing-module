@@ -47,9 +47,9 @@ image_proc_t ImageProcessing::process_next_frame() {
     }
     std::cout<< output.status_code << " : " << lateral_model <<" : "<< output.angle_left <<" : "<< output.angle_right <<" : "<< output.stop_distance<<std::endl;
 
-if (lateral_model == 1000) {
-    lateral_model = output.lateral_position;
-}
+    if (lateral_model == 1000) {
+        lateral_model = output.lateral_position;
+    }
     int lateral_diff = output.lateral_position - static_cast<int>(lateral_model);
     if (output.status_code != 0 || abs(lateral_diff) > 100) {
         std::cout << "No sidelines" << std::endl;
@@ -59,10 +59,17 @@ if (lateral_model == 1000) {
         kalman(P, lateral_model, output.lateral_position, R);
         P = P + Q;
     }
-    //Logger::log_img_data(output);
+
+    Logger::log_img_data(output);
     std::cout<< output.status_code << " : " << lateral_model <<" : "<< output.angle_left <<" : "<< output.angle_right <<" : "<< output.stop_distance<<std::endl;
     return output;
 }
 
-// --------- DATA ATT LOGGA I LOGGFIL ----------
-// Allt i output :P
+// --------- TODO ----------
+// change so output.lateral_position = lateral_model before sending it to log
+
+// For output.severity 
+//  - if all is good (two sidelines detected), return 0
+//  - if something is wrong (only one sideline detected for example), return 1
+//  - if something is VERY wrong (no sidelines detected or only one for a
+//    certain amount of time), return 2
