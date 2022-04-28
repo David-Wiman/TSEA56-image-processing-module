@@ -377,7 +377,6 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
     cv::GaussianBlur(gray, gauss, cv::Size(3, 3), 0, 0);
     cv::Canny(gauss, edges, 100, 180, 3);
-    cv::imwrite("canny.jpg", edges);
     cv::HoughLines(edges, lines, 1, PI/180, 70, 0, 0);
     get_unique_lines(lines, 10, 58);
     classify_lines(lines, side_lines, stop_lines);
@@ -407,6 +406,7 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     // output_image = print_circles_on_image(circles, output_image);
     if (print_lines) {
         print_lines_on_image(side_lines, gauss, cv::Scalar(255, 100, 15));
+        cv::imwrite("canny.jpg", edges);
     }
 
     if (stop_lines.size() != 0) {

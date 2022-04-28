@@ -10,14 +10,14 @@
 
 class ImageProcessing {
 public:
-    explicit ImageProcessing(std::string path_root, const bool visualize);
+    explicit ImageProcessing(std::string path_root, const bool save_frames);
     ~ImageProcessing();
 
     image_proc_t process_next_frame();
 
 private:
     std::string path_root;
-    bool const visualize;
+    bool const save_frames;
     float lateral_model = 1000;
     cv::VideoCapture video_capture;
     float P = 10;

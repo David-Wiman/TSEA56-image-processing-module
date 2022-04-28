@@ -4,8 +4,8 @@
 
 #include <string>
 
-ImageProcessing::ImageProcessing(std::string path_name, const bool vl)
-: path_root{path_name}, visualize{vl}, video_capture{cv::CAP_ANY} {
+ImageProcessing::ImageProcessing(std::string path_name, const bool sf)
+: path_root{path_name}, save_frames{sf}, video_capture{cv::CAP_ANY} {
     // Check if we succeeded to open video capture
     if (!video_capture.isOpened()) {
         Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
@@ -41,12 +41,12 @@ image_proc_t ImageProcessing::process_next_frame() {
     frame2 = frame2 + mask;
 
     // Find lines and calculate angles and distances
-    output = image_process(frame2, true);
+    output = image_process(frame2, save_frames);
     int angle_diff = output.angle_left - output.angle_right;
-    cv::imwrite("out.jpg", frame2);
 
-    if (visualize) {
-        cv::imshow("frame", frame2);
+    if (save_frames) {
+        // cv::imshow("frame", frame2);
+        cv::imwrite("out.jpg", frame2);
     }
     // std::cout<< output.status_code << " : " << lateral_model <<" : "<< output.angle_left <<" : "<< output.angle_right <<" : "<< output.stop_distance<<std::endl;
 
