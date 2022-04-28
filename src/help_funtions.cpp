@@ -360,7 +360,8 @@ image_proc_t get_lateral_position(vector<cv::Vec2f> &side_lines, float image_w, 
 int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float image_h) {
     float rho = stop_line[0];
     float theta = stop_line[1];
-    return cvRound(image_h*sin(theta) + image_w/2*cos(theta) - rho);
+    float pixel_dist = image_h*sin(theta) + image_w/2*cos(theta) - rho;
+    return cvRound(0.335*pixel_dist+8);
 }
 
 image_proc_t image_process(cv::Mat& image, bool print_lines) {
@@ -373,9 +374,10 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     float image_height = static_cast<float>(image.size().height);
     float image_width = static_cast<float>(image.size().width);
 
-    cv::GaussianBlur(image, gauss, cv::Size(3, 3), 0, 0);
-    cv::Canny(gauss, edges, 80, 240, 3);
-    cv::HoughLines(edges, lines, 1, PI/180, 100, 0, 0);
+    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+    cv::GaussianBlur(gray, gauss, cv::Size(3, 3), 0, 0);
+    cv::Canny(gauss, edges, 100, 180, 3);
+    cv::HoughLines(edges, lines, 1, PI/180, 70, 0, 0);
     get_unique_lines(lines, 10, 58);
     classify_lines(lines, side_lines, stop_lines);
     if (side_lines.size() >= 2) {
@@ -390,7 +392,6 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
 
     } else {
         return_values.status_code = 2;
-        return return_values;
     } 
 
     /*cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
@@ -405,6 +406,7 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     // output_image = print_circles_on_image(circles, output_image);
     if (print_lines) {
         print_lines_on_image(side_lines, gauss, cv::Scalar(255, 100, 15));
+        cv::imwrite("canny.jpg", edges);
     }
 
     if (stop_lines.size() != 0) {
@@ -416,7 +418,6 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     } else {
         return_values.stop_distance = -1;
     }
-    image = gauss;
     return return_values;
 }
 

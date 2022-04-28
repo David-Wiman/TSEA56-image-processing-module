@@ -48,7 +48,7 @@ void test() {
         cv::imwrite("canny.jpg", canny);
 
         image_proc_t return_values = image_process(frame2, true);
-        // cout<< return_values.status_code << " : " << return_values.lateral_position <<":"<< return_values.angle_left <<":"<< return_values.angle_right <<":"<< return_values.stop_distance<<"/n";
+        cout<< return_values.status_code << " : " << return_values.lateral_position <<":"<< return_values.angle_left <<":"<< return_values.angle_right <<":"<< return_values.stop_distance<<endl;
         cv::imwrite("out.jpg", frame2);
     }
     cout<<"end"<<endl;
@@ -62,8 +62,7 @@ int main() {
     // test();
     // -------------- FOR CAR -----------------
 
-    Logger::init();
-    image_proc_t proccesed_img{};
+    Logger::init(true);
 
     ImageProcessing imageprocessor("./", false);
     while (true) {
