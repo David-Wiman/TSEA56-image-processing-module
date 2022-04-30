@@ -226,8 +226,18 @@ image_proc_t get_lateral_position(vector<cv::Vec2f> &side_lines, float image_w, 
     // cout << "deviation: " <<  (theta_l+theta_r)/2 <<
     //       "\nl_lat left: " << b_v - b_vl*cos(theta_l) <<
     //       "\tl_lat right: " << b_vr*cos(theta_r);
-    return_values.angle_left = static_cast<int>(180*angle_left/PI);
-    return_values.angle_right = static_cast<int>(180*angle_right/PI);
+    return_values.angle_left = static_cast<int>(180*angle_left/PI) % 180;
+    if (return_values.angle_left > 90) {
+        return_values.angle_left = return_values.angle_left - 180;
+        cout<<"detected_left_angle > 90 degrees"<<endl;
+
+    }
+    return_values.angle_right = static_cast<int>(180*angle_right/PI) % 180;
+    if (return_values.angle_right > 90) {
+        return_values.angle_right = return_values.angle_right - 180;
+        cout<<"detected_left_angle > 90 degrees"<<endl;
+    }
+
 
     return return_values;
 }
@@ -259,8 +269,11 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
         return_values = get_lateral_position(side_lines, image_width, image_height);
         return_values.status_code = 0;
     } else if (side_lines.size() == 1) {
-        int angle = static_cast<int>(180*side_lines[0][1]/PI);
-
+        int angle = static_cast<int>(180*side_lines[0][1]/PI) % 180;
+        if (angle > 90) {
+            angle = angle - 180;
+            cout<<"detected_angle > 90 degrees"<<endl;
+    }
         return_values.angle_left = angle;
         return_values.angle_right = angle;
         return_values.status_code = 1;
