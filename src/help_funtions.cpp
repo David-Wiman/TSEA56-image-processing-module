@@ -230,15 +230,13 @@ image_proc_t get_lateral_position(vector<cv::Vec2f> &side_lines, float image_w, 
     if (return_values.angle_left > 90) {
         return_values.angle_left = return_values.angle_left - 180;
         cout<<"detected_left_angle > 90 degrees"<<endl;
-
     }
+    
     return_values.angle_right = static_cast<int>(180*angle_right/PI) % 180;
     if (return_values.angle_right > 90) {
         return_values.angle_right = return_values.angle_right - 180;
         cout<<"detected_left_angle > 90 degrees"<<endl;
     }
-
-
     return return_values;
 }
 
@@ -252,8 +250,6 @@ int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float imag
 image_proc_t image_process(cv::Mat& image, bool print_lines) {
     cv::Mat edges, gray, gauss;
     vector<cv::Vec2f> lines, side_lines, stop_lines;
-    vector<cv::Vec3f> circles;
-    vector<cv::Vec3f> filted_circles;
     image_proc_t return_values{};
     return_values.status_code = 2;
     float image_height = static_cast<float>(image.size().height);
@@ -265,6 +261,7 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     cv::HoughLines(edges, lines, 1, PI/180, 70, 0, 0);
     get_unique_lines(lines, 10, 58);
     classify_lines(lines, side_lines, stop_lines);
+
     if (side_lines.size() >= 2) {
         return_values = get_lateral_position(side_lines, image_width, image_height);
         return_values.status_code = 0;
@@ -273,7 +270,7 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
         if (angle > 90) {
             angle = angle - 180;
             cout<<"detected_angle > 90 degrees"<<endl;
-    }
+        }
         return_values.angle_left = angle;
         return_values.angle_right = angle;
         return_values.status_code = 1;
