@@ -11,7 +11,7 @@ INC := -isystem/usr/local/include/opencv4/ -isystemlogger/src -Icommon
 
 # Compiling flags
 CPPFLAGS += -Wno-deprecated-declarations -Wall -Wextra -pedantic -Weffc++ -Wold-style-cast -Woverloaded-virtual -fmax-errors=3 -g
-CPPFLAGS += -Wconversion -Wcast-align -Wunused -Wshadow -Wold-style-cast -Wpointer-arith -Wcast-qual  -Wno-missing-brace
+CPPFLAGS += -Wconversion -Wcast-align -Wunused -Wshadow -Wold-style-cast -Wpointer-arith -Wcast-qual # -Wno-missing-brace
 CPPFLAGS += -std=c++17 -MMD $(INC)
 
 CFLAGS := -Wall -Wextra -pedantic

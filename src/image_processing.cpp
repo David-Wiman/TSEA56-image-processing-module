@@ -41,7 +41,6 @@ image_proc_t ImageProcessing::process_next_frame() {
 
     // Find lines and calculate angles and distances
     output = image_process(frame2, save_frames);
-    std::cout<< output.status_code << std::endl;
     int angle_diff = output.angle_left - output.angle_right;
 
     if (save_frames) {
@@ -64,19 +63,18 @@ image_proc_t ImageProcessing::process_next_frame() {
             case left_correct:
                 output.angle_right = output.angle_left;
                 output.status_code = 1;
-                std::cout<<"Left angle"<<std::endl;
+                std::cout<<"No detected right angle"<<std::endl;
                 goto skip_kalman;
             case right_correct:
                 output.angle_left = output.angle_right;
                 output.status_code = 1;
-                std::cout<<"Right angle"<<std::endl;
+                std::cout<<"No detected left angle"<<std::endl;
                 goto skip_kalman;
             case left_correct + right_correct:
                 break;
             default: assert(false);   //something went wrong with the bits.
                 std::cout<<"Something went wrong with bits"<<std::endl;
         }
-        counter = 0;
         kalman(P, lateral_model, output.lateral_position, R);
         P = P + Q;
         pre_left = output.angle_left;
