@@ -33,7 +33,6 @@ image_proc_t ImageProcessing::process_next_frame() {
     image_proc_t output{};
     // Get next frame
     video_capture.read(frame);
-    int counter = 0;
 
 
     cv::remap(frame, frame2, mapx, mapy, cv::INTER_LINEAR);
@@ -42,33 +41,48 @@ image_proc_t ImageProcessing::process_next_frame() {
 
     // Find lines and calculate angles and distances
     output = image_process(frame2, save_frames);
+    std::cout<< output.status_code << std::endl;
     int angle_diff = output.angle_left - output.angle_right;
 
     if (save_frames) {
-        // cv::imshow("frame", frame2);
         cv::imwrite("out.jpg", frame2);
     }
-
     if (lateral_model == 1000) {
         lateral_model = static_cast<float> (output.lateral_position);
     }
-    int lateral_diff = output.lateral_position - static_cast<int>(lateral_model);
+    int left_diff = output.angle_left - static_cast<int>(pre_left);
+    int right_diff = output.angle_right - static_cast<int>(pre_right);
     if (output.status_code == 0) {
-        if (abs(lateral_diff) > 100) {
-            output.status_code = 1;
-            std::cout<<"lateral outside model"<<std::endl;
-            couter++;
-            if (counter >= 5) {
-                std::cout<<"reset model"<<std::endl;
-                lateral_model = static_cast<float> (output.lateral_position);
-                counter = 0;
-            }
-        } else {
-            counter = 0;
-            kalman(P, lateral_model, output.lateral_position, R);
-            P = P + Q;
+        #define left_correct (1 << 0)
+        #define right_correct (1 << 1)
+
+        switch((abs(left_diff) < 20 ? left_correct : 0) | (abs(right_diff) < 20 ? right_correct : 0)) {
+            case 0:
+                output.status_code = 2;
+                std::cout<<"No angle"<<std::endl;
+                goto skip_kalman;
+            case left_correct:
+                output.angle_right = output.angle_left;
+                output.status_code = 1;
+                std::cout<<"Left angle"<<std::endl;
+                goto skip_kalman;
+            case right_correct:
+                output.angle_left = output.angle_right;
+                output.status_code = 1;
+                std::cout<<"Right angle"<<std::endl;
+                goto skip_kalman;
+            case left_correct + right_correct:
+                break;
+            default: assert(false);   //something went wrong with the bits.
+                std::cout<<"Something went wrong with bits"<<std::endl;
         }
-    }
+        counter = 0;
+        kalman(P, lateral_model, output.lateral_position, R);
+        P = P + Q;
+        pre_left = output.angle_left;
+        pre_right = output.angle_right;
+        }
+    skip_kalman:
     output.lateral_position = static_cast<int> (lateral_model / 6.36); // skaling with 22 to get dist in cm
 
     Logger::log_img_data(output);

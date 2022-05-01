@@ -64,7 +64,7 @@ int main() {
 
     Logger::init(true);
 
-    ImageProcessing imageprocessor("./", false);
+    ImageProcessing imageprocessor("./", true);
     while (true) {
         imageprocessor.process_next_frame();
         if (cv::waitKey(10) > 0) break;

@@ -278,6 +278,8 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     } else {
         return_values.status_code = 2;
     } 
+    std::cout << "status"<< return_values.status_code << std::endl;
+
 
     if (print_lines) {
         print_lines_on_image(side_lines, gauss, cv::Scalar(255, 100, 15));
