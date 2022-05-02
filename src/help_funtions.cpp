@@ -200,6 +200,73 @@ void get_unique_lines(vector<cv::Vec2f> &lines, float theta_margin = 5, float rh
 }
 
 
+
+float average_circle_coord(vector<cv::Vec3f> const &lines, int position) {
+    float sum = 0;
+    for (unsigned int i=0; i < lines.size(); i++) {
+        sum += lines[i][position];
+    }
+    return sum/static_cast<float>(lines.size());
+}
+
+
+cv::Vec3f average_circle(vector<cv::Vec3f> const &circles) {
+    cv::Vec3f circle;
+    float size = static_cast<float>(circles.size());
+    for (unsigned int i=0; i < circles.size(); i++) {
+        circle[0] += circles[i][0];  // x
+        circle[1] += circles[i][1];  // y
+        circle[2] += circles[i][2];  // r
+    }
+    circle[0] = circle[0]/size;
+    circle[1] = circle[1]/size;
+    circle[2] = circle[2]/size;
+    return circle;
+}
+
+
+vector<cv::Vec3f> get_unique_circles(vector<cv::Vec3f> circles) {
+    // Group similar circles
+    vector<vector<cv::Vec3f>> circle_clusters;
+    vector<cv::Vec3f> circle;
+    circle.push_back(circles[0]);
+    circle_clusters.push_back(circle);
+    bool sim = false;
+
+    for (unsigned int i=0; i < circles.size(); i++) {
+        sim = false;
+        for (unsigned int j=0; j < circle_clusters.size(); j++) {
+            float delta_x = average_circle_coord(circle_clusters[j], 0);
+            float delta_y = average_circle_coord(circle_clusters[j], 1);
+            float delta_r = average_circle_coord(circle_clusters[j], 2);
+
+            delta_x = abs(delta_x - circles[i][0]);
+            delta_y = abs(delta_y - circles[i][1]);
+            delta_r = abs(delta_r - circles[i][2]);
+
+            if (delta_x < 50 && delta_y < 50 &&  delta_r < 50) {
+                circle_clusters[j].push_back(circles[i]);
+                sim = true;
+                break;
+            }
+        }
+        if (sim == false) {
+            // vector<cv::Vec3f> circle;
+            circle.push_back(circles[i]);
+            circle_clusters.push_back(circle);
+        }
+    }
+    // Merge similar lines by averaging
+    vector<cv::Vec3f> unique_circles;
+    for (unsigned int i=0; i < circle_clusters.size(); i++) {
+        cv::Vec3f averaged_circle = average_circle(circle_clusters[i]);
+        unique_circles.push_back(averaged_circle);
+    }
+    return unique_circles;
+}
+
+
+
 // ### Position calculation
 image_proc_t get_lateral_position(vector<cv::Vec2f> &side_lines, float image_w, float image_h) {
     sort(side_lines.begin(), side_lines.end(), comp_rho_rev);
@@ -278,6 +345,17 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     } else {
         return_values.status_code = 2;
     } 
+
+    /*cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
+                 edges.rows/16,  // Distance between unique circles
+                 100, 30, 1, 30 // canny, center, min_r, max_r
+    );
+    for (unsigned int i=0; i<circles.size(); i++) {
+        if (not circle_between_lines(side_lines[0], side_lines[1], circles[i])) {
+            filted_circles.push_back(circles[i]);
+        }
+    }*/
+    // output_image = print_circles_on_image(circles, output_image);
 
 
     if (print_lines) {

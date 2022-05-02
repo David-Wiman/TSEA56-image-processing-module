@@ -30,6 +30,11 @@ float average_rho(std::vector<cv::Vec2f> const &lines);
 float average_theta(std::vector<cv::Vec2f> const &lines);
 cv::Vec2f average_line(std::vector<cv::Vec2f> const &lines);
 void get_unique_lines(std::vector<cv::Vec2f> &lines, float theta_margin, float rho_margin);
+
+float average_circle_coord(std::vector<cv::Vec3f> const &lines, int position);
+cv::Vec3f average_circle(std::vector<cv::Vec3f> const &circles);
+std::vector<cv::Vec3f> get_unique_circles(std::vector<cv::Vec3f>& circles);
+
 image_proc_t get_lateral_position(std::vector<cv::Vec2f> &side_lines, float image_w, float image_h);
 int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float image_h);
 
