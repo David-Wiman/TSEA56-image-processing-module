@@ -13,6 +13,7 @@ const float PI = 3.14159265359f;
 
 cv::Mat get_transform_mtx(std::string src, int x, int y);
 void print_lines_on_image(std::vector<cv::Vec2f> const & lines, cv::Mat& image, cv::Scalar color);
+cv::Mat print_circles_on_image(std::vector<cv::Vec3f> circles, cv::Mat& image, cv::Scalar color);
 void remove_negative_rho(std::vector<cv::Vec2f>& lines);
 bool comp_rho(cv::Vec2f const &line1, cv::Vec2f const &line2);
 bool comp_rho_rev(cv::Vec2f const &line1, cv::Vec2f const &line2);
@@ -34,6 +35,7 @@ void get_unique_lines(std::vector<cv::Vec2f> &lines, float theta_margin, float r
 float average_circle_coord(std::vector<cv::Vec3f> const &lines, int position);
 cv::Vec3f average_circle(std::vector<cv::Vec3f> const &circles);
 std::vector<cv::Vec3f> get_unique_circles(std::vector<cv::Vec3f>& circles);
+float circle_line_dist(cv::Vec3f circle, cv::Vec2f line);
 
 image_proc_t get_lateral_position(std::vector<cv::Vec2f> &side_lines, float image_w, float image_h);
 int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float image_h);

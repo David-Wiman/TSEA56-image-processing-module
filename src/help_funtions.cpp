@@ -47,6 +47,17 @@ void print_lines_on_image(vector<cv::Vec2f> const &lines, cv::Mat& image, cv::Sc
     return;
 }
 
+cv::Mat print_circles_on_image(vector<cv::Vec3f> circles, cv::Mat& image) {
+    for (unsigned int i=0; i < circles.size(); i++) {
+        cv::Point cp;
+        cp.x = cvRound(circles[i][0]);
+        cp.y = cvRound(circles[i][1]);
+        cv::circle(image, cp, cvRound(circles[i][2]), CV_RGB(0, 0, 255), 5);
+    }
+    return image;
+}
+
+
 void remove_negative_rho(vector<cv::Vec2f>& lines) {
     for (unsigned int i = 0; i < lines.size(); i++) {
         if (lines[i][0] < 0) {
@@ -63,6 +74,10 @@ bool comp_rho(cv::Vec2f const & line1, cv::Vec2f const &line2) {
 }
 bool comp_rho_rev(cv::Vec2f const &line1, cv::Vec2f const &line2) {
     return line1[0] < line2[0];
+}
+
+bool comp_theta(cv::Vec2f const & line1, cv::Vec2f const &line2) {
+    return line1[1] < line2[1];
 }
 
 float angle_difference(float const angle_1, float const angle_2) {
@@ -266,6 +281,17 @@ vector<cv::Vec3f> get_unique_circles(vector<cv::Vec3f> circles) {
 }
 
 
+float circle_line_dist(cv::Vec3f circle, cv::Vec2f line) {
+    float rho = line[0];
+    float theta = line[1];
+    float x = circle[0];
+    float y = circle[1];
+    float r = circle[2];
+    float dist = abs(x*cos(theta) + y*sin(theta) - rho) - r;
+    return dist;
+}
+
+
 
 // ### Position calculation
 image_proc_t get_lateral_position(vector<cv::Vec2f> &side_lines, float image_w, float image_h) {
@@ -316,7 +342,9 @@ int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float imag
 
 image_proc_t image_process(cv::Mat& image, bool print_lines) {
     cv::Mat edges, gray, gauss;
-    vector<cv::Vec2f> lines, side_lines, stop_lines;
+    vector<cv::Vec2f> lines, side_lines, stop_lines, lines_1, lines_2, side_lines2;    
+    vector<cv::Vec3f> circles;
+
     image_proc_t return_values{};
     return_values.status_code = 2;
     float image_height = static_cast<float>(image.size().height);
@@ -325,11 +353,53 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
     cv::GaussianBlur(gray, gauss, cv::Size(3, 3), 0, 0);
     cv::Canny(gauss, edges, 100, 180, 3);
-    cv::HoughLines(edges, lines, 1, PI/180, 70, 0, 0);
+    cv::HoughLines(edges, lines, 1, PI/180, 40, 0, 0);
     get_unique_lines(lines, 10, 58);
     classify_lines(lines, side_lines, stop_lines);
+    cout<<side_lines.size() <<endl;
+    // if (side_lines.size() > 2) {
+    //     cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
+    //                 10000,  // Distance between unique circles
+    //                 180, 200, 100, 1000 // canny, treshold, min_r, max_r
+    //             );
+    // cout<<circles.size() <<endl;
 
+    //     if (circles.size() != 0) {
+    //         for (unsigned int i=0; i<side_lines.size(); i++) {
+    //             if (abs(circle_line_dist(circles[0], side_lines[i])) < 20) {
+    //                 tangent_lines.push_back(side_lines[i]);
+    //             } else {
+    //                 non_tangent_lines.push_back(side_lines[i]);
+    //             }
+    //         }
+    //         if (tangent_lines.size() > 0 && non_tangent_lines.size() > 0) {
+    //             sort(tangent_lines.begin(), tangent_lines.end(), comp_theta);
+    //             sort(non_tangent_lines.begin(), non_tangent_lines.end(), comp_theta);
+    //             side_lines.clear();
+    //             side_lines.push_back(tangent_lines[0]);
+    //             side_lines.push_back(non_tangent_lines[0]);
+    //         }
+    //         image = print_circles_on_image(circles, image);
+    //     }
+    // }
+
+    lines_1.push_back(side_lines[0]);
     if (side_lines.size() >= 2) {
+        for (int i=1; i<side_lines.size(); i++) {
+            if (side_lines[0][0] - side_lines[i][0] < 50) {
+                lines_1.push_back(side_lines[i]);
+            } else {
+                lines_2.push_back(side_lines[i]);
+            }
+        }
+        if (lines_1.size() > 0 && lines_2.size() > 0) {
+            sort(lines_1.begin(), lines_1.end(), comp_theta);
+            sort(lines_2.begin(), lines_2.end(), comp_theta);
+            side_lines.clear();
+            side_lines.push_back(lines_1[0]);
+            side_lines.push_back(lines_2[0]);
+        }
+        std::cout<<side_lines.size()<<endl;
         return_values = get_lateral_position(side_lines, image_width, image_height);
         return_values.status_code = 0;
     } else if (side_lines.size() == 1) {
@@ -346,20 +416,8 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
         return_values.status_code = 2;
     } 
 
-    /*cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
-                 edges.rows/16,  // Distance between unique circles
-                 100, 30, 1, 30 // canny, center, min_r, max_r
-    );
-    for (unsigned int i=0; i<circles.size(); i++) {
-        if (not circle_between_lines(side_lines[0], side_lines[1], circles[i])) {
-            filted_circles.push_back(circles[i]);
-        }
-    }*/
-    // output_image = print_circles_on_image(circles, output_image);
-
-
     if (print_lines) {
-        print_lines_on_image(side_lines, gauss, cv::Scalar(255, 100, 15));
+        print_lines_on_image(side_lines, image, cv::Scalar(255, 100, 15));
         cv::imwrite("canny.jpg", edges);
     }
 
@@ -367,12 +425,10 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
         return_values.stop_distance = get_stop_line_distance(stop_lines[0], image_width, image_height);
         // cout << "l_s: " << stop_distance << endl;
         if (print_lines) {
-            print_lines_on_image(stop_lines, gauss, cv::Scalar(0, 255, 0));
+            print_lines_on_image(stop_lines, image, cv::Scalar(0, 255, 0));
         }
     } else {
         return_values.stop_distance = -1;
     }
     return return_values;
 }
-
-

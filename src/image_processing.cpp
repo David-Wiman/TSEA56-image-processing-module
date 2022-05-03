@@ -59,28 +59,33 @@ image_proc_t ImageProcessing::process_next_frame() {
             case 0:
                 output.status_code = 2;
                 std::cout<<"No angle"<<std::endl;
-                goto skip_kalman;
+                break;
             case left_correct:
                 output.angle_right = output.angle_left;
                 output.status_code = 1;
                 std::cout<<"No detected right angle"<<std::endl;
-                goto skip_kalman;
+                break;
             case right_correct:
                 output.angle_left = output.angle_right;
                 output.status_code = 1;
                 std::cout<<"No detected left angle"<<std::endl;
-                goto skip_kalman;
+
+                break;
             case left_correct + right_correct:
+                kalman(P, lateral_model, output.lateral_position, R);
+                P = P + Q;
+                pre_left = output.angle_left;
+                pre_right = output.angle_right;
                 break;
             default: assert(false);   //something went wrong with the bits.
                 std::cout<<"Something went wrong with bits"<<std::endl;
         }
-        kalman(P, lateral_model, output.lateral_position, R);
-        P = P + Q;
-        pre_left = output.angle_left;
-        pre_right = output.angle_right;
-        }
-    skip_kalman:
+    }
+    // if (status_code != 0) {
+    //     HoughCircles...
+
+
+    // }
     output.lateral_position = static_cast<int> (lateral_model / 6.36); // skaling with 22 to get dist in cm
 
     Logger::log_img_data(output);
