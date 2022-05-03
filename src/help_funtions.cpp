@@ -77,7 +77,7 @@ bool comp_rho_rev(cv::Vec2f const &line1, cv::Vec2f const &line2) {
 }
 
 bool comp_theta(cv::Vec2f const & line1, cv::Vec2f const &line2) {
-    return line1[1] > line2[1];
+    return abs(line1[1]) < abs(line2[1]);
 }
 
 float angle_difference(float const angle_1, float const angle_2) {
@@ -119,8 +119,8 @@ int parametricIntersect(cv::Vec2f const &line_1, cv::Vec2f const &line_2, int wi
     float st2=sinf(theta_2);     //d
     float d=ct1*st2-st1*ct2;        //determinative (rearranged matrix for inverse)
     if(d!=0.0f) {   
-        x=(int)((st2*r1-st1*r2)/d);
-        y=(int)((-ct2*r1+ct1*r2)/d);
+        int x = static_cast<int>((st2*rho_1-st1*rho_2)/d);
+        int y = static_cast<int>((-ct2*rho_1+ct1*rho_2)/d);
         if (0<x && x<width && 0<y && y<height)
             return(1);
     }
@@ -358,7 +358,7 @@ image_proc_t get_lateral_position(vector<cv::Vec2f> &side_lines, float image_w, 
 int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float image_h) {
     float rho = stop_line[0];
     float theta = stop_line[1];
-    float pixel_dist = image_h*sin(theta) + image_w/2*cos(theta) - rho;
+    float pixel_dist = abs(image_h*sin(theta) + image_w/2*cos(theta) - rho);
     return cvRound(0.335*pixel_dist+8);
 }
 
@@ -412,26 +412,23 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
         // side_lines = {side_lines.begin(), side_lines.begin() + 2};
 
         lines_1.push_back(side_lines[0]);
-        for (int i=1; i<side_lines.size(); i++) {
+        for (unsigned int i=1; i<side_lines.size(); i++) {
             // cout << "rho diff: " << side_lines[0][0] - side_lines[i][0] << endl;
-            if (!(parametricIntersect(side_lines[0], side_lines[i], 320, 240))) {
+            if ((parametricIntersect(side_lines[0], side_lines[i], 320, 240))) {
                 lines_1.push_back(side_lines[i]);
             } else {
                 lines_2.push_back(side_lines[i]);
             }
         }
-        // side_lines.clear();
-        // if (lines_1.size() > 0) {
-        //     sort(lines_1.begin(), lines_1.end(), comp_theta);
-        //     side_lines.push_back(lines_1[0]);
-        //     cout << "sideline1111" <<endl;
-        // }
-        // if (lines_2.size() > 0) {
-        //     sort(lines_2.begin(), lines_2.end(), comp_theta);
-        //     side_lines.push_back(lines_2[0]);
-        //     cout << "sideline2222" <<endl;
-        // }
-        std::cout<<side_lines.size()<<endl;
+        side_lines.clear();
+        if (lines_1.size() > 0) {
+            sort(lines_1.begin(), lines_1.end(), comp_theta);
+            side_lines.push_back(lines_1[0]);
+        }
+        if (lines_2.size() > 0) {
+            sort(lines_2.begin(), lines_2.end(), comp_theta);
+            side_lines.push_back(lines_2[0]);
+        }
         return_values = get_lateral_position(side_lines, image_width, image_height);
         return_values.status_code = 0;
     } else if (side_lines.size() == 1) {
@@ -447,6 +444,7 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     } else {
         return_values.status_code = 2;
     } 
+    cout<<side_lines.size() <<endl;
 
     if (print_lines) {
         print_lines_on_image(side_lines, image, cv::Scalar(255, 100, 15));
