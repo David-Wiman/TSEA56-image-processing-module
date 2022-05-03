@@ -86,7 +86,7 @@ image_proc_t ImageProcessing::process_next_frame() {
 
 
     // }
-    output.lateral_position = static_cast<int> (lateral_model / 6.36); // skaling with 22 to get dist in cm
+    output.lateral_position = static_cast<int> (0.3464 * lateral_model - 5.9895); // skaling with 22 to get dist in cm
 
     Logger::log_img_data(output);
     std::cout<<angle_diff<<std::endl;

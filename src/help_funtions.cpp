@@ -359,7 +359,7 @@ int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float imag
     float rho = stop_line[0];
     float theta = stop_line[1];
     float pixel_dist = abs(image_h*sin(theta) + image_w/2*cos(theta) - rho);
-    return cvRound(0.335*pixel_dist+8);
+    return cvRound(0.5778 * pixel_dist + 4.3468);
 }
 
 image_proc_t image_process(cv::Mat& image, bool print_lines) {
@@ -376,7 +376,7 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     // cv::GaussianBlur(gray, gauss, cv::Size(3, 3), 0, 0);
     cv::Canny(gray, edges, 100, 180, 3);
     cv::HoughLines(edges, lines, 1, PI/180, 30, 0, 0);
-    get_unique_lines(lines, 10, 58);
+    get_unique_lines(lines, 10, 40);
     classify_lines(lines, side_lines, stop_lines);
     cout<<side_lines.size() <<endl;
     // if (side_lines.size() > 2) {
