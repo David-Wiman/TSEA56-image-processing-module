@@ -22,8 +22,8 @@ private:
     cv::VideoCapture video_capture;
     float P = 10;
 
-    int pre_left = 0;
-    int pre_right = 0;
+    int pre_left = 1000;
+    int pre_right = 1000;
 
     cv::Mat mapx{};
     cv::Mat mapy{};

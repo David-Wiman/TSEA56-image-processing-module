@@ -49,6 +49,12 @@ image_proc_t ImageProcessing::process_next_frame() {
     if (lateral_model == 1000) {
         lateral_model = static_cast<float> (output.lateral_position);
     }
+    if (pre_left == 1000) {
+        pre_left = output.angle_left;
+    }
+    if (pre_right == 1000) {
+        pre_right = output.angle_right;
+    }
     int left_diff = output.angle_left - static_cast<int>(pre_left);
     int right_diff = output.angle_right - static_cast<int>(pre_right);
     if (output.status_code == 0) {
