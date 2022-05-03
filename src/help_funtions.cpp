@@ -77,7 +77,7 @@ bool comp_rho_rev(cv::Vec2f const &line1, cv::Vec2f const &line2) {
 }
 
 bool comp_theta(cv::Vec2f const & line1, cv::Vec2f const &line2) {
-    return line1[1] < line2[1];
+    return line1[1] > line2[1];
 }
 
 float angle_difference(float const angle_1, float const angle_2) {
@@ -103,6 +103,28 @@ bool lines_parallell(cv::Vec2f const &line_1, cv::Vec2f const &line_2) {
 
 bool lines_perpendicular(cv::Vec2f const &line_1, cv::Vec2f const &line_2) {
     return abs(angle_difference(line_1[1], line_2[1]) - PI/2) < 20*PI/180;
+}
+
+
+//Find point (x,y) where two parameterized lines intersect :p Returns 0 if lines are parallel 
+int parametricIntersect(cv::Vec2f const &line_1, cv::Vec2f const &line_2, int width, int height) {
+    float rho_1 = line_1[0];
+    float theta_1 = line_1[1];
+    float rho_2 = line_2[0];
+    float theta_2 = line_2[1];  
+    
+    float ct1=cosf(theta_1);     //matrix element a
+    float st1=sinf(theta_1);     //b
+    float ct2=cosf(theta_2);     //c
+    float st2=sinf(theta_2);     //d
+    float d=ct1*st2-st1*ct2;        //determinative (rearranged matrix for inverse)
+    if(d!=0.0f) {   
+        x=(int)((st2*r1-st1*r2)/d);
+        y=(int)((-ct2*r1+ct1*r2)/d);
+        if (0<x && x<width && 0<y && y<height)
+            return(1);
+    }
+    return 0;
 }
 
 float get_rho(cv::Vec2f const &line) {
@@ -341,7 +363,7 @@ int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float imag
 }
 
 image_proc_t image_process(cv::Mat& image, bool print_lines) {
-    cv::Mat edges, gray, gauss;
+    cv::Mat edges, gray;
     vector<cv::Vec2f> lines, side_lines, stop_lines, lines_1, lines_2, side_lines2;    
     vector<cv::Vec3f> circles;
 
@@ -351,9 +373,9 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     float image_width = static_cast<float>(image.size().width);
 
     cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
-    cv::GaussianBlur(gray, gauss, cv::Size(3, 3), 0, 0);
-    cv::Canny(gauss, edges, 100, 180, 3);
-    cv::HoughLines(edges, lines, 1, PI/180, 40, 0, 0);
+    // cv::GaussianBlur(gray, gauss, cv::Size(3, 3), 0, 0);
+    cv::Canny(gray, edges, 100, 180, 3);
+    cv::HoughLines(edges, lines, 1, PI/180, 30, 0, 0);
     get_unique_lines(lines, 10, 58);
     classify_lines(lines, side_lines, stop_lines);
     cout<<side_lines.size() <<endl;
@@ -383,22 +405,32 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     //     }
     // }
 
-    lines_1.push_back(side_lines[0]);
+    
     if (side_lines.size() >= 2) {
+        // print_lines_on_image(side_lines, image, cv::Scalar(255, 255, 0));
+        sort(side_lines.begin(), side_lines.end(), comp_theta);
+        // side_lines = {side_lines.begin(), side_lines.begin() + 2};
+
+        lines_1.push_back(side_lines[0]);
         for (int i=1; i<side_lines.size(); i++) {
-            if (side_lines[0][0] - side_lines[i][0] < 50) {
+            // cout << "rho diff: " << side_lines[0][0] - side_lines[i][0] << endl;
+            if (!(parametricIntersect(side_lines[0], side_lines[i], 320, 240))) {
                 lines_1.push_back(side_lines[i]);
             } else {
                 lines_2.push_back(side_lines[i]);
             }
         }
-        if (lines_1.size() > 0 && lines_2.size() > 0) {
-            sort(lines_1.begin(), lines_1.end(), comp_theta);
-            sort(lines_2.begin(), lines_2.end(), comp_theta);
-            side_lines.clear();
-            side_lines.push_back(lines_1[0]);
-            side_lines.push_back(lines_2[0]);
-        }
+        // side_lines.clear();
+        // if (lines_1.size() > 0) {
+        //     sort(lines_1.begin(), lines_1.end(), comp_theta);
+        //     side_lines.push_back(lines_1[0]);
+        //     cout << "sideline1111" <<endl;
+        // }
+        // if (lines_2.size() > 0) {
+        //     sort(lines_2.begin(), lines_2.end(), comp_theta);
+        //     side_lines.push_back(lines_2[0]);
+        //     cout << "sideline2222" <<endl;
+        // }
         std::cout<<side_lines.size()<<endl;
         return_values = get_lateral_position(side_lines, image_width, image_height);
         return_values.status_code = 0;
