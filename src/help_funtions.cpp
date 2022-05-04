@@ -16,7 +16,7 @@ using std::string;
 cv::Mat get_transform_mtx(string src, int x, int y) {
     std::ifstream in(src);
     if (!in.good()) {
-        cout << "ERROR: File " << src << " doesn't exits."
+        cout << "ERROR: File " << src << " doesn't exits." << endl;
     }
     string element;
     std::cin.rdbuf(in.rdbuf());
