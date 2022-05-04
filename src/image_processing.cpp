@@ -11,12 +11,12 @@ ImageProcessing::ImageProcessing(std::string path_name, const bool sf)
         Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
         return;
     }
-    video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320); // set frame size
-    video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240); // set frame size
+    // video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320); // set frame size
+    // video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240); // set frame size
     // video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
 
-    mapy = get_transform_mtx(std::string{path_root + "/Matrices/mapy.txt"}, 320, 240);
-    mapx = get_transform_mtx(std::string{path_root + "/Matrices/mapx.txt"}, 320, 240);
+    mapy = get_transform_mtx(std::string{path_root + "/Matrices_480/mapy.txt"}, 640, 480);
+    mapx = get_transform_mtx(std::string{path_root + "/Matrices_480/mapx.txt"}, 640, 480);
     mask = cv::imread(cv::samples::findFile(std::string{path_root + "mask.png"}));
 }
 
@@ -30,21 +30,25 @@ image_proc_t ImageProcessing::process_next_frame() {
     const float Q = 10;  // Process noise
     cv::Mat frame{};
     cv::Mat frame2;
+    cv::Mat frame3;
+
     image_proc_t output{};
     // Get next frame
     video_capture.read(frame);
 
 
     cv::remap(frame, frame2, mapx, mapy, cv::INTER_LINEAR);
+    cv::resize(frame2, frame3, cv::Size(320, 240), cv::INTER_LINEAR);
+
     // Remove inaccurate pixels in botton corners from fisheye+ipm with a mask
-    frame2 = frame2 + mask;
+    frame3 = frame3 + mask;
 
     // Find lines and calculate angles and distances
-    output = image_process(frame2, save_frames);
+    output = image_process(frame3, save_frames);
     int angle_diff = output.angle_left - output.angle_right;
 
     if (save_frames) {
-        cv::imwrite("out.jpg", frame2);
+        cv::imwrite("out.jpg", frame3);
     }
     if (lateral_model == 1000) {
         lateral_model = static_cast<float> (output.lateral_position);
