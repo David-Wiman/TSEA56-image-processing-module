@@ -1,13 +1,15 @@
 #ifndef SRC_HELP_FUNTIONS_H_
 #define SRC_HELP_FUNTIONS_H_
 
-#include "raspi_common.h"
-
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <cmath>
+#include <string>
+
 #include <opencv2/opencv.hpp>
+
+#include "raspi_common.h"
 
 const float PI = 3.14159265359f;
 

@@ -1,8 +1,12 @@
+#include <string>
+
 #include "image_processing.h"
 #include "help_funtions.h"
 #include "log.h"
 
-#include <string>
+using std::cout;
+using std::endl;
+
 
 ImageProcessing::ImageProcessing(std::string path_name, const bool sf)
 : path_root{path_name}, save_frames{sf}, video_capture{cv::CAP_ANY} {
@@ -11,8 +15,8 @@ ImageProcessing::ImageProcessing(std::string path_name, const bool sf)
         Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
         return;
     }
-    video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320); // set frame size
-    video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240); // set frame size
+    video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320);  // set frame size
+    video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240);  // set frame size
     // video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
 
     mapy = get_transform_mtx(std::string{path_root + "/Matrices/mapy.txt"}, 320, 240);
@@ -61,21 +65,20 @@ image_proc_t ImageProcessing::process_next_frame() {
         #define left_correct (1 << 0)
         #define right_correct (1 << 1)
 
-        switch((abs(left_diff) < 20 ? left_correct : 0) | (abs(right_diff) < 20 ? right_correct : 0)) {
+        switch ((abs(left_diff) < 20 ? left_correct : 0) | (abs(right_diff) < 20 ? right_correct : 0)) {
             case 0:
                 output.status_code = 2;
-                std::cout<<"No angle"<<std::endl;
+                cout << "No angle" << endl;
                 break;
             case left_correct:
                 output.angle_right = output.angle_left;
                 output.status_code = 1;
-                std::cout<<"No detected right angle"<<std::endl;
+                cout << "No detected right angle" << endl;
                 break;
             case right_correct:
                 output.angle_left = output.angle_right;
                 output.status_code = 1;
-                std::cout<<"No detected left angle"<<std::endl;
-
+                cout << "No detected left angle" << endl;
                 break;
             case left_correct + right_correct:
                 kalman(P, lateral_model, output.lateral_position, R);
@@ -83,8 +86,8 @@ image_proc_t ImageProcessing::process_next_frame() {
                 pre_left = output.angle_left;
                 pre_right = output.angle_right;
                 break;
-            default: assert(false);   //something went wrong with the bits.
-                std::cout<<"Something went wrong with bits"<<std::endl;
+            default: assert(false);
+                cout << "Something went wrong with bits" << endl;
         }
     }
     // if (status_code != 0) {
@@ -92,19 +95,19 @@ image_proc_t ImageProcessing::process_next_frame() {
 
 
     // }
-    output.lateral_position = static_cast<int> (0.3464 * lateral_model - 5.9895); // skaling with 22 to get dist in cm
+    output.lateral_position = static_cast<int> (0.3464 * lateral_model - 5.9895);
 
     Logger::log_img_data(output);
-    std::cout<<angle_diff<<std::endl;
-    std::cout<< output.status_code << " : " << output.lateral_position <<" : "<<
-                output.angle_left <<" : "<< output.angle_right <<" : "<<
-                output.stop_distance<<std::endl;
+    cout << angle_diff << endl;
+    cout<< output.status_code << " : " << output.lateral_position << " : " <<
+                output.angle_left << " : " << output.angle_right << " : " <<
+                output.stop_distance << endl;
     return output;
 }
 
 // --------- TODO ----------
 
-// For output.severity 
+// For output.severity
 //  - if all is good (two sidelines detected), return 0
 //  - if something is wrong (only one sideline detected for example), return 1
 //  - if something is VERY wrong (no sidelines detected or only one for a

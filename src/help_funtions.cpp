@@ -2,6 +2,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <string>
 
 #include "help_funtions.h"
 
@@ -14,14 +15,17 @@ using std::string;
 // ### Help functions
 cv::Mat get_transform_mtx(string src, int x, int y) {
     std::ifstream in(src);
-    std::string element;
+    if (!in.good()) {
+        cout << "ERROR: File " << src << " doesn't exits."
+    }
+    string element;
     std::cin.rdbuf(in.rdbuf());
     cv::Mat matrix = cv::Mat(y, x, CV_32FC1);
 
-    for (int j=0; j<y; j++) {
-        for (int i=0; i<x; i++) {
+    for (int j=0; j < y; j++) {
+        for (int i=0; i < x; i++) {
             std::cin >> element;
-            matrix.at<float>(j,i) = std::stof(element);
+            matrix.at<float>(j, i) = std::stof(element);
         }
     }
     return matrix;
@@ -106,21 +110,21 @@ bool lines_perpendicular(cv::Vec2f const &line_1, cv::Vec2f const &line_2) {
 }
 
 
-//Find point (x,y) where two parameterized lines intersect :p Returns 0 if lines are parallel 
+// Find point (x,y) where two parameterized lines intersect :p Returns 0 if lines are parallel
 int parametricIntersect(cv::Vec2f const &line_1, cv::Vec2f const &line_2, int width, int height) {
     float rho_1 = line_1[0];
     float theta_1 = line_1[1];
     float rho_2 = line_2[0];
-    float theta_2 = line_2[1];  
-    
-    float ct1=cosf(theta_1);     //matrix element a
-    float st1=sinf(theta_1);     //b
-    float ct2=cosf(theta_2);     //c
-    float st2=sinf(theta_2);     //d
-    float d=ct1*st2-st1*ct2;        //determinative (rearranged matrix for inverse)
-    if(d!=0.0f) {   
-        int x = static_cast<int>((st2*rho_1-st1*rho_2)/d);
-        int y = static_cast<int>((-ct2*rho_1+ct1*rho_2)/d);
+    float theta_2 = line_2[1];
+
+    float ct1 = cosf(theta_1);  // matrix element a
+    float st1 = sinf(theta_1);  // b
+    float ct2 = cosf(theta_2);  // c
+    float st2 = sinf(theta_2);  // d
+    float d = ct1*st2-st1*ct2;  // determinative (rearranged matrix for inverse)
+    if (d!= 0.0f) {
+        int x = static_cast<int>((st2*rho_1 - st1*rho_2)/d);
+        int y = static_cast<int>((-ct2*rho_1 + ct1*rho_2)/d);
         if (0<x && x<width && 0<y && y<height)
             return(1);
     }
@@ -228,7 +232,7 @@ void get_unique_lines(vector<cv::Vec2f> &lines, float theta_margin = 5, float rh
 
     // Merge similar lines by averaging
     vector<cv::Vec2f> unique_lines;
-    for (unsigned int i=0; i<line_clusters.size(); i++) {
+    for (unsigned int i=0; i < line_clusters.size(); i++) {
         cv::Vec2f averaged_line = average_line(line_clusters[i]);
         unique_lines.push_back(averaged_line);
     }
@@ -344,13 +348,13 @@ image_proc_t get_lateral_position(vector<cv::Vec2f> &side_lines, float image_w, 
     return_values.angle_left = static_cast<int>(180*angle_left/PI) % 180;
     if (return_values.angle_left > 90) {
         return_values.angle_left = return_values.angle_left - 180;
-        cout<<"detected_left_angle > 90 degrees"<<endl;
+        cout << "detected_left_angle > 90 degrees" << endl;
     }
-    
+
     return_values.angle_right = static_cast<int>(180*angle_right/PI) % 180;
     if (return_values.angle_right > 90) {
         return_values.angle_right = return_values.angle_right - 180;
-        cout<<"detected_left_angle > 90 degrees"<<endl;
+        cout << "detected_left_angle > 90 degrees" << endl;
     }
     return return_values;
 }
@@ -364,7 +368,7 @@ int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float imag
 
 image_proc_t image_process(cv::Mat& image, bool print_lines) {
     cv::Mat edges, gray;
-    vector<cv::Vec2f> lines, side_lines, stop_lines, lines_1, lines_2, side_lines2;    
+    vector<cv::Vec2f> lines, side_lines, stop_lines, lines_1, lines_2;
     vector<cv::Vec3f> circles;
 
     image_proc_t return_values{};
@@ -378,7 +382,7 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     cv::HoughLines(edges, lines, 1, PI/180, 30, 0, 0);
     get_unique_lines(lines, 10, 40);
     classify_lines(lines, side_lines, stop_lines);
-    cout<<side_lines.size() <<endl;
+    cout << side_lines.size() << endl;
     // if (side_lines.size() > 2) {
     //     cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
     //                 10000,  // Distance between unique circles
@@ -405,15 +409,12 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     //     }
     // }
 
-    
     if (side_lines.size() >= 2) {
         // print_lines_on_image(side_lines, image, cv::Scalar(255, 255, 0));
         sort(side_lines.begin(), side_lines.end(), comp_theta);
-        // side_lines = {side_lines.begin(), side_lines.begin() + 2};
 
         lines_1.push_back(side_lines[0]);
         for (unsigned int i=1; i<side_lines.size(); i++) {
-            // cout << "rho diff: " << side_lines[0][0] - side_lines[i][0] << endl;
             if ((parametricIntersect(side_lines[0], side_lines[i], 320, 240))) {
                 lines_1.push_back(side_lines[i]);
             } else {
@@ -435,7 +436,7 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
         int angle = static_cast<int>(180*side_lines[0][1]/PI) % 180;
         if (angle > 90) {
             angle = angle - 180;
-            cout<<"detected_angle > 90 degrees"<<endl;
+            cout << "detected_angle > 90 degrees" << endl;
         }
         return_values.angle_left = angle;
         return_values.angle_right = angle;
@@ -443,8 +444,7 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
 
     } else {
         return_values.status_code = 2;
-    } 
-    cout<<side_lines.size() <<endl;
+    }
 
     if (print_lines) {
         print_lines_on_image(side_lines, image, cv::Scalar(255, 100, 15));
@@ -453,7 +453,6 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
 
     if (stop_lines.size() != 0) {
         return_values.stop_distance = get_stop_line_distance(stop_lines[0], image_width, image_height);
-        // cout << "l_s: " << stop_distance << endl;
         if (print_lines) {
             print_lines_on_image(stop_lines, image, cv::Scalar(0, 255, 0));
         }

@@ -1,6 +1,8 @@
-#include <opencv2/opencv.hpp>
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <opencv2/opencv.hpp>
+
 
 #ifndef IMAGE_PROCESSING_H
 #define IMAGE_PROCESSING_H
