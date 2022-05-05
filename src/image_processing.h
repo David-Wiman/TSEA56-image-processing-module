@@ -26,6 +26,8 @@ private:
 
     int pre_left = 1000;
     int pre_right = 1000;
+    int left_counter = 0;
+    int right_counter = 0;
 
     cv::Mat mapx{};
     cv::Mat mapy{};

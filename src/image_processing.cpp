@@ -62,20 +62,31 @@ image_proc_t ImageProcessing::process_next_frame() {
     int left_diff = output.angle_left - static_cast<int>(pre_left);
     int right_diff = output.angle_right - static_cast<int>(pre_right);
     if (output.status_code == 0) {
+        if (left_counter >= 5) {
+            pre_left = output.angle_left;
+            left_counter = 0;
+        }
+        if (right_counter >= 5) {
+            pre_right = output.angle_right;
+            right_counter = 0;
+        }
         #define left_correct (1 << 0)
         #define right_correct (1 << 1)
-
         switch ((abs(left_diff) < 20 ? left_correct : 0) | (abs(right_diff) < 20 ? right_correct : 0)) {
             case 0:
+                left_counter++;
+                right_counter++;
                 output.status_code = 2;
                 cout << "No angle" << endl;
                 break;
             case left_correct:
+                right_counter++;
                 output.angle_right = output.angle_left;
                 output.status_code = 1;
                 cout << "No detected right angle" << endl;
                 break;
             case right_correct:
+                left_counter++;
                 output.angle_left = output.angle_right;
                 output.status_code = 1;
                 cout << "No detected left angle" << endl;
@@ -85,17 +96,15 @@ image_proc_t ImageProcessing::process_next_frame() {
                 P = P + Q;
                 pre_left = output.angle_left;
                 pre_right = output.angle_right;
+                left_counter = 0;
+                right_counter = 0;
                 break;
             default: assert(false);
                 cout << "Something went wrong with bits" << endl;
         }
     }
-    // if (status_code != 0) {
-    //     HoughCircles...
 
-
-    // }
-    output.lateral_position = static_cast<int> (0.3464 * lateral_model - 5.9895);
+    output.lateral_position = static_cast<int> (0.3838 * lateral_model - 16.121);
 
     Logger::log_img_data(output);
     cout << angle_diff << endl;
