@@ -1,17 +1,17 @@
 #include <string>
+#include <chrono>
 #include <thread>
+#include <atomic>
 
 #include "image_processing.h"
 #include "help_funtions.h"
 #include "log.h"
 
-using std::cout;
-using std::endl;
-
+using namespace std;
 
 ImageProcessing::ImageProcessing(std::string path_name, const bool sf)
 : path_root{path_name}, save_frames{sf} {
-    Logger.log(INFO, __FILE__, "Image Processing", "Initiate");
+    Logger::log(INFO, __FILE__, "Image Processing", "Initiate");
 
     mapy = get_transform_mtx(std::string{path_root + "/Matrices/mapy.txt"}, 320, 240);
     mapx = get_transform_mtx(std::string{path_root + "/Matrices/mapx.txt"}, 320, 240);
@@ -34,8 +34,7 @@ ImageProcessing::~ImageProcessing() {
 }
 
 void ImageProcessing::frame_spawner() {
-    cout << "Frame spawner" << endl;
-    Logger.log(DEBUG, __FILE__, "frame_spawner", "Initiating");
+    Logger::log(DEBUG, __FILE__, "frame_spawner", "Initiating");
     cv::VideoCapture video_capture(cv::CAP_ANY);
     if (!video_capture.isOpened()) {
         Logger::log(ERROR, __FILE__, "frame_spawner", "Unable to open camera");
@@ -47,34 +46,37 @@ void ImageProcessing::frame_spawner() {
     while (spawn_threads.load()) {
         auto const created = chrono::high_resolution_clock::now();
         video_capture.read(frame);
-        struct frame_package package{created, std::move(frame)};
+        struct frame_package package{std::move(created), std::move(frame)};
         frame_buffer.store(package);
+        auto const now = chrono::high_resolution_clock::now();
+        float spawn_time = chrono::duration<float, std::milli>(now-package.created).count();
+        Logger::log(DEBUG, __FILE__, "frame_spawner: Spawned new frame took (ms)", spawn_time);
     }
-    Logger.log(DEBUG, __FILE__, "frame_spawner", "Closed");
+    Logger::log(DEBUG, __FILE__, "frame_spawner", "Closed");
 }
 
 void ImageProcessing::frame_processor() {
-    Logger.log(DEBUG, __FILE__, "frame_processor", "Initiating");
+    Logger::log(DEBUG, __FILE__, "frame_processor", "Initiating");
     while (process_threads.load()) {
         auto const start = chrono::high_resolution_clock::now();
         struct frame_package package = frame_buffer.extract();
         image_proc_t data = process_next_frame(package.frame);
         auto const now = chrono::high_resolution_clock::now();
-        double processing_time = chrono::duration<double, std::milli>(now-start).count();
-        double total_time = chrono::duration<double, std::milli>(now-package.created).count();
+        float processing_time = chrono::duration<float, std::milli>(now-start).count();
+        float total_time = chrono::duration<float, std::milli>(now-package.created).count();
         out_buffer.store(data);
-        Logger.log(DEBUG, __FILE__, "Processing time (ms)", processing_time);
-        Logger.log(DEBUG, __FILE__, "Total frame latency (ms)", total time);
+        Logger::log(DEBUG, __FILE__, "Processing time (ms)", processing_time);
+        Logger::log(DEBUG, __FILE__, "Total frame latency (ms)", total_time);
     }
-    Logger.log(DEBUG, __FILE__, "frame_processor", "Closed");
+    Logger::log(DEBUG, __FILE__, "frame_processor", "Closed");
 }
 
 image_proc_t ImageProcessing::get_next_image_data() {
     auto const start = chrono::high_resolution_clock::now();
     image_proc_t data = out_buffer.extract();
     auto const now = chrono::high_resolution_clock::now();
-    double wait_time = chrono::duration<double, std::milli>(now-start).count();
-    Logger.log(DEBUG, __FILE__, "get_next_image_data", "Waited on image data for (ms)", wait_time);
+    float wait_time = chrono::duration<float, std::milli>(now-start).count();
+    Logger::log(DEBUG, __FILE__, "Waited on image data for (ms)", wait_time);
     return data;
 }
 

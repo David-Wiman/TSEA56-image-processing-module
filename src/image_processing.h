@@ -16,7 +16,7 @@
 struct frame_package {
     std::chrono::time_point<std::chrono::high_resolution_clock> created;
     cv::Mat frame;
-}
+};
 
 class ImageProcessing {
 public:

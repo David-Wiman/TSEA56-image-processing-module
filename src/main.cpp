@@ -55,7 +55,9 @@ void test() {
 
 
 int main() {
-    ImageProcessing imageprocessor("./", true);
+    ImageProcessing image_processor("./", true);
     Logger::init(true);
-    while (true) {}
+    while (true) {
+        image_processor.get_next_image_data();
+    }
 }
