@@ -13,6 +13,11 @@
 #ifndef IMAGE_PROCESSING_H
 #define IMAGE_PROCESSING_H
 
+struct frame_package {
+    std::chrono::time_point<std::chrono::high_resolution_clock> created;
+    cv::Mat frame;
+}
+
 class ImageProcessing {
 public:
     ImageProcessing(std::string path_root, const bool save_frames);
@@ -31,7 +36,7 @@ private:
     std::thread *processor_thread = nullptr;
     std::atomic<bool> spawn_threads{true};
     std::atomic<bool> process_threads{true};
-    ReplacingBuffer<cv::Mat> frame_buffer{};
+    ReplacingBuffer<frame_package> frame_buffer{};
 
     ReplacingBuffer<image_proc_t> out_buffer{};
 

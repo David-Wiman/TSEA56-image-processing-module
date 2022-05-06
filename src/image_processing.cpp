@@ -11,6 +11,7 @@ using std::endl;
 
 ImageProcessing::ImageProcessing(std::string path_name, const bool sf)
 : path_root{path_name}, save_frames{sf} {
+    Logger.log(INFO, __FILE__, "Image Processing", "Initiate");
 
     mapy = get_transform_mtx(std::string{path_root + "/Matrices/mapy.txt"}, 320, 240);
     mapx = get_transform_mtx(std::string{path_root + "/Matrices/mapx.txt"}, 320, 240);
@@ -20,8 +21,6 @@ ImageProcessing::ImageProcessing(std::string path_name, const bool sf)
 }
 
 ImageProcessing::~ImageProcessing() {
-    cout << "Destroying image processing module" << endl;
-
     // Frame processor could be blocked if frame spawner stops,
     // so stop processor first
     process_threads.store(false);
@@ -36,33 +35,46 @@ ImageProcessing::~ImageProcessing() {
 
 void ImageProcessing::frame_spawner() {
     cout << "Frame spawner" << endl;
+    Logger.log(DEBUG, __FILE__, "frame_spawner", "Initiating");
     cv::VideoCapture video_capture(cv::CAP_ANY);
     if (!video_capture.isOpened()) {
-        Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
+        Logger::log(ERROR, __FILE__, "frame_spawner", "Unable to open camera");
     }
     video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320);  // set frame size
     video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240);  // set frame size
 
     cv::Mat frame{};
     while (spawn_threads.load()) {
+        auto const created = chrono::high_resolution_clock::now();
         video_capture.read(frame);
-        frame_buffer.store(frame);
+        struct frame_package package{created, std::move(frame)};
+        frame_buffer.store(package);
     }
-    cout << "Destroying frame spawner" << endl;
+    Logger.log(DEBUG, __FILE__, "frame_spawner", "Closed");
 }
 
 void ImageProcessing::frame_processor() {
-    cout << "Frame processor" << endl;
+    Logger.log(DEBUG, __FILE__, "frame_processor", "Initiating");
     while (process_threads.load()) {
-        cv::Mat frame = frame_buffer.extract();
-        image_proc_t data = process_next_frame(frame);
+        auto const start = chrono::high_resolution_clock::now();
+        struct frame_package package = frame_buffer.extract();
+        image_proc_t data = process_next_frame(package.frame);
+        auto const now = chrono::high_resolution_clock::now();
+        double processing_time = chrono::duration<double, std::milli>(now-start).count();
+        double total_time = chrono::duration<double, std::milli>(now-package.created).count();
         out_buffer.store(data);
+        Logger.log(DEBUG, __FILE__, "Processing time (ms)", processing_time);
+        Logger.log(DEBUG, __FILE__, "Total frame latency (ms)", total time);
     }
-    cout << "Destroying frame processor" << endl;
+    Logger.log(DEBUG, __FILE__, "frame_processor", "Closed");
 }
 
 image_proc_t ImageProcessing::get_next_image_data() {
+    auto const start = chrono::high_resolution_clock::now();
     image_proc_t data = out_buffer.extract();
+    auto const now = chrono::high_resolution_clock::now();
+    double wait_time = chrono::duration<double, std::milli>(now-start).count();
+    Logger.log(DEBUG, __FILE__, "get_next_image_data", "Waited on image data for (ms)", wait_time);
     return data;
 }
 
