@@ -6,10 +6,6 @@ using namespace std;
 
    // ------------- FOR TESTING -----------------
 void test() {
-    // cv::Mat src = cv::imread(cv::samples::findFile("./ref_images_640_420/save_as_filename5.jpg"));
-    // cv::Mat src = cv::imread(cv::samples::findFile("./Reference/Left_turn.png"));
-    // cv::Mat src = cv::imread(cv::samples::findFile("./Test_road/test3.jpg"));
-    // cv::resize(src, src, cv::Size(320, 240));
 
 
 
@@ -62,12 +58,19 @@ int main() {
     // test();
     // -------------- FOR CAR -----------------
 
-    Logger::init(true);
+    cv::VideoCapture video_capture(cv::CAP_ANY);
+    if (!video_capture.isOpened()) {
+        Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
+        }
+    video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320);  // set frame size
+    video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240);  // set frame size
 
     ImageProcessing imageprocessor("./", true);
+    Logger::init(true);
+    cv::Mat frame{};
     while (true) {
-        imageprocessor.process_next_frame();
-        if (cv::waitKey(10) > 0) break;
+        video_capture.read(frame);
+        imageprocessor.process_next_frame(&frame);
     }
     // -------------- END CAR ---------------
 }

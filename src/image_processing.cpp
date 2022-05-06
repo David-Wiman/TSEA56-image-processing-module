@@ -9,14 +9,14 @@ using std::endl;
 
 
 ImageProcessing::ImageProcessing(std::string path_name, const bool sf)
-: path_root{path_name}, save_frames{sf}, video_capture{cv::CAP_ANY} {
+: path_root{path_name}, save_frames{sf} {
     // Check if we succeeded to open video capture
-    if (!video_capture.isOpened()) {
-        Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
-        return;
-    }
-    video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320);  // set frame size
-    video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240);  // set frame size
+    // if (!video_capture.isOpened()) {
+    //     Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
+    //     return;
+    // }
+    // video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320);  // set frame size
+    // video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240);  // set frame size
     // video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
 
     mapy = get_transform_mtx(std::string{path_root + "/Matrices/mapy.txt"}, 320, 240);
@@ -25,21 +25,18 @@ ImageProcessing::ImageProcessing(std::string path_name, const bool sf)
 }
 
 ImageProcessing::~ImageProcessing() {
-    video_capture.release();
     cv::destroyAllWindows();
 }
 
-image_proc_t ImageProcessing::process_next_frame() {
+image_proc_t ImageProcessing::process_next_frame(cv::Mat *frame) {
     const int R = 10;  // Measurement noise
     const float Q = 10;  // Process noise
-    cv::Mat frame{};
-    cv::Mat frame2;
+    cv::Mat frame2{};
     image_proc_t output{};
     // Get next frame
-    video_capture.read(frame);
 
 
-    cv::remap(frame, frame2, mapx, mapy, cv::INTER_LINEAR);
+    cv::remap(*frame, frame2, mapx, mapy, cv::INTER_LINEAR);
     // Remove inaccurate pixels in botton corners from fisheye+ipm with a mask
     frame2 = frame2 + mask;
 
