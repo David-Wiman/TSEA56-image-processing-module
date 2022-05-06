@@ -41,6 +41,7 @@ void ImageProcessing::frame_spawner() {
     }
     video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320);  // set frame size
     video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240);  // set frame size
+    video_capture.set(cv::CAP_PROP_BUFFERSIZE, 3);  // set frame size
 
     cv::Mat frame{};
     while (spawn_threads.load()) {
@@ -64,7 +65,8 @@ void ImageProcessing::frame_processor() {
         auto const now = chrono::high_resolution_clock::now();
         float processing_time = chrono::duration<float, std::milli>(now-start).count();
         float total_time = chrono::duration<float, std::milli>(now-package.created).count();
-        out_buffer.store(data);
+        struct image_data_package out_package{std::move(now), std::move(data)};
+        out_buffer.store(out_package);
         Logger::log(DEBUG, __FILE__, "Processing time (ms)", processing_time);
         Logger::log(DEBUG, __FILE__, "Total frame latency (ms)", total_time);
     }
@@ -73,11 +75,13 @@ void ImageProcessing::frame_processor() {
 
 image_proc_t ImageProcessing::get_next_image_data() {
     auto const start = chrono::high_resolution_clock::now();
-    image_proc_t data = out_buffer.extract();
+    struct image_data_package package = out_buffer.extract();
     auto const now = chrono::high_resolution_clock::now();
     float wait_time = chrono::duration<float, std::milli>(now-start).count();
     Logger::log(DEBUG, __FILE__, "Waited on image data for (ms)", wait_time);
-    return data;
+    float data_age = chrono::duration<float, std::milli>(now-package.sent).count();
+    Logger::log(DEBUG, __FILE__, "Image data was this old (ms)", data_age);
+    return package.data;
 }
 
 image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {

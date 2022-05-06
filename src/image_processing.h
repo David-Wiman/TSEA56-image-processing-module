@@ -18,6 +18,11 @@ struct frame_package {
     cv::Mat frame;
 };
 
+struct image_data_package {
+    std::chrono::time_point<std::chrono::high_resolution_clock> sent;
+    image_proc_t data;
+};
+
 class ImageProcessing {
 public:
     ImageProcessing(std::string path_root, const bool save_frames);
@@ -38,7 +43,7 @@ private:
     std::atomic<bool> process_threads{true};
     ReplacingBuffer<frame_package> frame_buffer{};
 
-    ReplacingBuffer<image_proc_t> out_buffer{};
+    ReplacingBuffer<image_data_package> out_buffer{};
 
     std::string path_root;
     bool const save_frames;
