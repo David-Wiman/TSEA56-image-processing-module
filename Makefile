@@ -7,7 +7,7 @@ CC_CPP = g++
 CC_C = gcc
 
 # Other include directories with headers
-INC := -isystem/usr/local/include/opencv4/ -isystemlogger/src -Icommon
+INC := -isystem/usr/local/include/opencv4/ -isystemlogger/src -Icommon -Ithread-safe
 
 # Compiling flags
 CPPFLAGS += -Wno-deprecated-declarations -Wall -Wextra -pedantic -Weffc++ -Wold-style-cast -Woverloaded-virtual -fmax-errors=3 -g
@@ -20,7 +20,7 @@ CFLAGS += $(INC)
 # Linking flags
 
 OPENCV += -lopencv_core -lopencv_video -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio -lopencv_highgui
-LDFLAGS = $(OPENCV)
+LDFLAGS = $(OPENCV) -lpthread
 
 # File which contains the main function
 MAINFILE := main.cpp

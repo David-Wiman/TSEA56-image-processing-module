@@ -55,22 +55,7 @@ void test() {
 
 
 int main() {
-    // test();
-    // -------------- FOR CAR -----------------
-
-    cv::VideoCapture video_capture(cv::CAP_ANY);
-    if (!video_capture.isOpened()) {
-        Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
-        }
-    video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320);  // set frame size
-    video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240);  // set frame size
-
     ImageProcessing imageprocessor("./", true);
     Logger::init(true);
-    cv::Mat frame{};
-    while (true) {
-        video_capture.read(frame);
-        imageprocessor.process_next_frame(frame);
-    }
-    // -------------- END CAR ---------------
+    while (true) {}
 }

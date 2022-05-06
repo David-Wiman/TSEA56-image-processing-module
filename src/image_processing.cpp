@@ -1,4 +1,5 @@
 #include <string>
+#include <thread>
 
 #include "image_processing.h"
 #include "help_funtions.h"
@@ -10,22 +11,59 @@ using std::endl;
 
 ImageProcessing::ImageProcessing(std::string path_name, const bool sf)
 : path_root{path_name}, save_frames{sf} {
-    // Check if we succeeded to open video capture
-    // if (!video_capture.isOpened()) {
-    //     Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
-    //     return;
-    // }
-    // video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320);  // set frame size
-    // video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240);  // set frame size
-    // video_capture.set(cv::CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
 
     mapy = get_transform_mtx(std::string{path_root + "/Matrices/mapy.txt"}, 320, 240);
     mapx = get_transform_mtx(std::string{path_root + "/Matrices/mapx.txt"}, 320, 240);
     mask = cv::imread(cv::samples::findFile(std::string{path_root + "mask.png"}));
+    spawner_thread = new std::thread(&ImageProcessing::frame_spawner, this);
+    processor_thread = new std::thread(&ImageProcessing::frame_processor, this);
 }
 
 ImageProcessing::~ImageProcessing() {
+    cout << "Destroying image processing module" << endl;
+
+    // Frame processor could be blocked if frame spawner stops,
+    // so stop processor first
+    process_threads.store(false);
+    processor_thread->join();
+    delete processor_thread;
+
+    spawn_threads.store(false);
+    spawner_thread->join();
+    delete spawner_thread;
     cv::destroyAllWindows();
+}
+
+void ImageProcessing::frame_spawner() {
+    cout << "Frame spawner" << endl;
+    cv::VideoCapture video_capture(cv::CAP_ANY);
+    if (!video_capture.isOpened()) {
+        Logger::log(ERROR, __FILE__, "Image processing", "Unable to open camera");
+    }
+    video_capture.set(cv::CAP_PROP_FRAME_WIDTH, 320);  // set frame size
+    video_capture.set(cv::CAP_PROP_FRAME_HEIGHT, 240);  // set frame size
+
+    cv::Mat frame{};
+    while (spawn_threads.load()) {
+        video_capture.read(frame);
+        frame_buffer.store(frame);
+    }
+    cout << "Destroying frame spawner" << endl;
+}
+
+void ImageProcessing::frame_processor() {
+    cout << "Frame processor" << endl;
+    while (process_threads.load()) {
+        cv::Mat frame = frame_buffer.extract();
+        image_proc_t data = process_next_frame(frame);
+        out_buffer.store(data);
+    }
+    cout << "Destroying frame processor" << endl;
+}
+
+image_proc_t ImageProcessing::get_next_image_data() {
+    image_proc_t data = out_buffer.extract();
+    return data;
 }
 
 image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
