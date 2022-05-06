@@ -28,7 +28,7 @@ ImageProcessing::~ImageProcessing() {
     cv::destroyAllWindows();
 }
 
-image_proc_t ImageProcessing::process_next_frame(cv::Mat *frame) {
+image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
     const int R = 10;  // Measurement noise
     const float Q = 10;  // Process noise
     cv::Mat frame2{};
@@ -36,7 +36,7 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat *frame) {
     // Get next frame
 
 
-    cv::remap(*frame, frame2, mapx, mapy, cv::INTER_LINEAR);
+    cv::remap(frame, frame2, mapx, mapy, cv::INTER_LINEAR);
     // Remove inaccurate pixels in botton corners from fisheye+ipm with a mask
     frame2 = frame2 + mask;
 

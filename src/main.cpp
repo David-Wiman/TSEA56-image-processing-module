@@ -33,7 +33,7 @@ void test() {
     // upper = int(min(255, (1.0 + 0.33) * v))
     // edged = cv2.Canny(image, lower, upper)
 
-    cout<<"start"<<endl;
+    cout << "start" << endl;
     for (int i=1; i<1000; i++) {
         video_capture.read(frame);
 
@@ -70,7 +70,7 @@ int main() {
     cv::Mat frame{};
     while (true) {
         video_capture.read(frame);
-        imageprocessor.process_next_frame(&frame);
+        imageprocessor.process_next_frame(frame);
     }
     // -------------- END CAR ---------------
 }

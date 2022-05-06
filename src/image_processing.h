@@ -15,7 +15,7 @@ public:
     ImageProcessing(std::string path_root, const bool save_frames);
     ~ImageProcessing();
 
-    image_proc_t process_next_frame(cv::Mat *frame);
+    image_proc_t process_next_frame(cv::Mat &frame);
 
 private:
     std::string path_root;
