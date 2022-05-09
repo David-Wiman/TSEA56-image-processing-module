@@ -456,6 +456,17 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
         if (print_lines) {
             print_lines_on_image(stop_lines, image, cv::Scalar(0, 255, 0));
         }
+        // if two sidelines are detected but they intersect, stopline is
+        // considered incorrect
+        if (side_lines.size() == 2) {
+            if ((parametricIntersect(side_lines[0], side_lines[1], 320, 240))) {
+                return_values.stop_distance = -1;
+            }
+        // if only one sideline, or zero sidelines are detected, stopline
+        // is considered incorrect
+        } else if (side_lines.size() == 1 || side_lines.size() == 0) {
+            return_values.stop_distance = -1;
+        }
     } else {
         return_values.stop_distance = -1;
     }
