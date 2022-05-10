@@ -61,7 +61,7 @@ ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, (HEIGHT
 newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (WIDTH, HEIGHT), 0.1, (WIDTH, HEIGHT))
 mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (WIDTH, HEIGHT), 5)
 
-img1 = cv2.imread("./calibration_320_240/reference.jpg")
+img1 = cv2.imread("./calibration_320_240/reference.png")
 img2 = cv2.imread("./Chessboard_ideal/chessboard_320_240.png")
 img1 = cv2.remap(img1, mapx, mapy, cv2.INTER_LINEAR)
 
@@ -99,6 +99,6 @@ f.close()
 
 
 ## Test matrix
-img3 = cv2.imread("./calibration_320_240/reference.jpg")
+img3 = cv2.imread("./calibration_320_240/reference.png")
 img3 = cv2.remap(img3, mapx, mapy, cv2.INTER_LINEAR)
 cv2.imwrite("combined_2.jpg", img3)
