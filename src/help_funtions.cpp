@@ -363,7 +363,7 @@ int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float imag
     float rho = stop_line[0];
     float theta = stop_line[1];
     float pixel_dist = abs(image_h*sin(theta) + image_w/2*cos(theta) - rho);
-    return cvRound(0.5428 * pixel_dist + 7.5703);
+    return cvRound(0.4374 * pixel_dist + 0.079);
 }
 
 image_proc_t image_process(cv::Mat& image, bool print_lines) {
