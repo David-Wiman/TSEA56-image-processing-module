@@ -160,7 +160,6 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
     output.lateral_position = static_cast<int> (0.2883 * lateral_model - 10.252);
 
     Logger::log_img_data(output);
-    cout << angle_diff << endl;
     cout<< output.status_code << " : " << output.lateral_position << " : " <<
                 output.angle_left << " : " << output.angle_right << " : " <<
                 output.stop_distance << endl;

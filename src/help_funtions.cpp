@@ -382,7 +382,6 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     cv::HoughLines(edges, lines, 1, PI/180, 30, 0, 0);
     get_unique_lines(lines, 10, 40);
     classify_lines(lines, side_lines, stop_lines);
-    cout << side_lines.size() << endl;
     // if (side_lines.size() > 2) {
     //     cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
     //                 10000,  // Distance between unique circles
