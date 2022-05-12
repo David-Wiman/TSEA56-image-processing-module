@@ -142,7 +142,7 @@ void classify_lines(vector<cv::Vec2f> &lines, vector<cv::Vec2f> &side_lines, vec
         return;
     } else {
         for (unsigned int i=0; i < lines.size(); i++) {
-            if (abs(line_vertical_deviation(lines[i])) < PI/4) {
+            if (abs(line_vertical_deviation(lines[i])) < PI/3) {
                 side_lines.push_back(lines[i]);
             }
         }
