@@ -136,13 +136,14 @@ float get_rho(cv::Vec2f const &line) {
     return rho;
 }
 
-void classify_lines(vector<cv::Vec2f> &lines, vector<cv::Vec2f> &side_lines, vector<cv::Vec2f> &stop_lines) {
+void classify_lines(vector<cv::Vec2f> &lines, vector<cv::Vec2f> &side_lines, vector<cv::Vec2f> &stop_lines, int pre_angle) {
     if (lines.size() == 1) {
         side_lines = lines;
         return;
     } else {
         for (unsigned int i=0; i < lines.size(); i++) {
-            if (abs(line_vertical_deviation(lines[i])) < PI/3) {
+            if (abs(line_vertical_deviation(lines[i])) < PI/3 && 
+                abs(angle_difference(lines[i][1], PI*pre_angle/180)) < 20) {
                 side_lines.push_back(lines[i]);
             }
         }
@@ -366,7 +367,7 @@ int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float imag
     return cvRound(0.4374 * pixel_dist + 0.079);
 }
 
-image_proc_t image_process(cv::Mat& image, bool print_lines) {
+image_proc_t image_process(cv::Mat& image, int pre_angle, bool print_lines) {
     cv::Mat edges, gray;
     vector<cv::Vec2f> lines, side_lines, stop_lines, lines_1, lines_2;
     vector<cv::Vec3f> circles;
@@ -381,7 +382,7 @@ image_proc_t image_process(cv::Mat& image, bool print_lines) {
     cv::Canny(gray, edges, 100, 180, 3);
     cv::HoughLines(edges, lines, 1, PI/180, 30, 0, 0);
     get_unique_lines(lines, 10, 40);
-    classify_lines(lines, side_lines, stop_lines);
+    classify_lines(lines, side_lines, stop_lines, pre_angle);
     // if (side_lines.size() > 2) {
     //     cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
     //                 10000,  // Distance between unique circles
