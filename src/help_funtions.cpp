@@ -12,7 +12,6 @@ using std::vector;
 using std::string;
 
 
-// ### Help functions
 cv::Mat get_transform_mtx(string src, int x, int y) {
     std::ifstream in(src);
     if (!in.good()) {
@@ -143,7 +142,7 @@ void classify_lines(vector<cv::Vec2f> &lines, vector<cv::Vec2f> &side_lines, vec
     } else {
         for (unsigned int i=0; i < lines.size(); i++) {
             if (abs(line_vertical_deviation(lines[i])) < PI/3 && 
-                abs(angle_difference(lines[i][1], PI*pre_angle/180)) < 20) {
+                abs(angle_difference(lines[i][1], PI*static_cast<float>(pre_angle)/180)) < 20) {
                 side_lines.push_back(lines[i]);
             }
         }
@@ -328,26 +327,15 @@ image_proc_t get_lateral_position(vector<cv::Vec2f> &side_lines, float image_w, 
     float rho_r = side_lines[1][0];
     float angle_right = side_lines[1][1];
 
-    // cout << "rho_l: " << rho_l << "\ttheta_l: " << theta_l << endl;
-    // cout << "rho_r: " << rho_r << "\ttheta_r: "  << theta_r << endl;
-
     float x_l = (rho_l - image_h*sin(angle_left)) / cos(angle_left);
     float x_r = (rho_r - image_h*sin(angle_right)) / cos(angle_right);
-    // cout <<  "x_l: " << x_l << "\tx_r: " << x_r << endl;
 
-    float b_v = x_r - x_l;
     float b_vl = image_w/2 - x_l;
     float b_vr = x_r - image_w/2;
-    // cout << "b_vl: " << b_vl << "\tb_vr: " << b_vr << endl;
 
     image_proc_t return_values{};
-    return_values.lateral_position = static_cast<int>(b_vr*cos(angle_right) + b_v - b_vl*cos(angle_left)/2);
     return_values.lateral_left = static_cast<int>(b_vl*cos(angle_left));
     return_values.lateral_right = static_cast<int>(b_vr*cos(angle_right));
-
-
-    // cout << "b_vl: " << b_vl << "\tb_vr: " << b_vr << endl;
-
     
 
     // cout << "deviation: " <<  (theta_l+theta_r)/2 <<
@@ -390,31 +378,6 @@ image_proc_t image_process(cv::Mat& image, int pre_angle, bool print_lines) {
     cv::HoughLines(edges, lines, 1, PI/180, 30, 0, 0);
     get_unique_lines(lines, 10, 40);
     classify_lines(lines, side_lines, stop_lines, pre_angle);
-    // if (side_lines.size() > 2) {
-    //     cv::HoughCircles(edges, circles, cv::HOUGH_GRADIENT, 10, //Resulution
-    //                 10000,  // Distance between unique circles
-    //                 180, 200, 100, 1000 // canny, treshold, min_r, max_r
-    //             );
-    // cout<<circles.size() <<endl;
-
-    //     if (circles.size() != 0) {
-    //         for (unsigned int i=0; i<side_lines.size(); i++) {
-    //             if (abs(circle_line_dist(circles[0], side_lines[i])) < 20) {
-    //                 tangent_lines.push_back(side_lines[i]);
-    //             } else {
-    //                 non_tangent_lines.push_back(side_lines[i]);
-    //             }
-    //         }
-    //         if (tangent_lines.size() > 0 && non_tangent_lines.size() > 0) {
-    //             sort(tangent_lines.begin(), tangent_lines.end(), comp_theta);
-    //             sort(non_tangent_lines.begin(), non_tangent_lines.end(), comp_theta);
-    //             side_lines.clear();
-    //             side_lines.push_back(tangent_lines[0]);
-    //             side_lines.push_back(non_tangent_lines[0]);
-    //         }
-    //         image = print_circles_on_image(circles, image);
-    //     }
-    // }
 
     if (side_lines.size() >= 2) {
         // print_lines_on_image(side_lines, image, cv::Scalar(255, 255, 0));

@@ -98,13 +98,16 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
 
     // Find lines and calculate angles and distances
     output = image_process(frame2, (output.angle_left + output.angle_right)/2, save_frames);
-    int angle_diff = output.angle_left - output.angle_right;
+    // int angle_diff = output.angle_left - output.angle_right;
 
     if (save_frames) {
         cv::imwrite("out.jpg", frame2);
     }
-    if (lateral_model == 1000) {
-        lateral_model = static_cast<float> (output.lateral_position);
+    if (left_model == 1000) {
+        left_model = static_cast<float> (output.lateral_left);
+    }
+    if (right_model == 1000) {
+        right_model = static_cast<float> (output.lateral_right);
     }
     if (pre_left == 1000) {
         pre_left = output.angle_left;
@@ -145,8 +148,11 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
                 cout << "No detected left angle" << endl;
                 break;
             case left_correct + right_correct:
-                kalman(P, lateral_model, output.lateral_position, R);
-                P = P + Q;
+                kalman(P_lat_l, left_model, output.lateral_left, R);
+                kalman(P_lat_r, right_model, output.lateral_right, R);
+                P_lat_l = P_lat_l + Q;
+                P_lat_r = P_lat_r + Q;
+
                 pre_left = output.angle_left;
                 pre_right = output.angle_right;
                 left_counter = 0;
@@ -156,27 +162,14 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
                 cout << "Something went wrong with bits" << endl;
         }
     }
-    int left_model = output.lateral_left;
-    int right_model = output.lateral_right;
 
 
-    output.lateral_position = static_cast<int> (0.2883 * lateral_model - 10.252);
     output.lateral_left = static_cast<int> (0.4432 * left_model - 24.4);
     output.lateral_right = static_cast<int> (-0.46 * right_model + 17.4);
 
     Logger::log_img_data(output);
-    cout<< output.status_code << " : " << output.lateral_left << " : " << output.lateral_right<< " : " << output.lateral_position << " : " <<
+    cout<< output.status_code << " : " << output.lateral_left << " : " << output.lateral_right<< " : " <<
                 output.angle_left << " : " << output.angle_right << " : " <<
                 output.stop_distance << endl;
     return output;
 }
-
-// --------- TODO ----------
-
-// For output.severity
-//  - if all is good (two sidelines detected), return 0
-//  - if something is wrong (only one sideline detected for example), return 1
-//  - if something is VERY wrong (no sidelines detected or only one for a
-//    certain amount of time), return 2
-
-// reset model if no sidelines found in xx cycles
