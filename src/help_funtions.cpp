@@ -317,7 +317,18 @@ float circle_line_dist(cv::Vec3f circle, cv::Vec2f line) {
     return dist;
 }
 
+// ### distance between to lines
+float lines_dist(cv::Vec2f const &line_1, cv::Vec2f const &line_2, float image_w, float image_h) {
+    float rho_1 = line_1[0];
+    float angle_1 = line_1[1];
+    float rho_2 = line_2[0];
+    float angle_2 = line_2[1];
 
+    float x_1 = (rho_1 - image_h*sin(angle_1)) / cos(angle_1);
+    float x_2 = (rho_2 - image_h*sin(angle_2)) / cos(angle_2);
+
+    return abs(x_1-x_2)*0.4432; // dist in cm
+}
 
 // ### Position calculation
 image_proc_t get_lateral_position(vector<cv::Vec2f> &side_lines, float image_w, float image_h) {
@@ -401,6 +412,7 @@ image_proc_t image_process(cv::Mat& image, int pre_angle, bool print_lines) {
             side_lines.push_back(lines_2[0]);
         }
         return_values = get_lateral_position(side_lines, image_width, image_height);
+        cout << "Dist between lines: " << lines_dist(side_lines[0], side_lines[1], image_width, image_height) << endl;
         return_values.status_code = 0;
     } else if (side_lines.size() == 1) {
         int angle = static_cast<int>(180*side_lines[0][1]/PI) % 180;
@@ -431,7 +443,7 @@ image_proc_t image_process(cv::Mat& image, int pre_angle, bool print_lines) {
         if (side_lines.size() == 2) {
             if ((parametricIntersect(side_lines[0], side_lines[1], 320, 240))
                  || !lines_parallell(side_lines[0], side_lines[1])
-                 || !lines_perpendicular(side_lines[0], stop_lines[0]) ) {
+                 || !lines_perpendicular(side_lines[0], stop_lines[0])) {
                 return_values.stop_distance = -1;
             }
         // if only one sideline, or zero sidelines are detected, stopline

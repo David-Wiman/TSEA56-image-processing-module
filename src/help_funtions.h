@@ -24,6 +24,7 @@ float line_vertical_deviation(cv::Vec2f const &line);
 bool line_is_horizontal(cv::Vec2f const &line);
 bool lines_parallell(cv::Vec2f const &line_1, cv::Vec2f const &line_2);
 bool lines_perpendicular(cv::Vec2f const &line_1, cv::Vec2f const &line_2);
+float lines_dist(cv::Vec2f const &line_1, cv::Vec2f const &line_2, float image_w, float image_h);
 float get_rho(cv::Vec2f const &line);
 void classify_lines(std::vector<cv::Vec2f> &lines, std::vector<cv::Vec2f> &side_lines, std::vector<cv::Vec2f> &stop_lines);
 void kalman(float &P, float &x_model, int z, float R);
