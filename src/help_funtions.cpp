@@ -341,7 +341,6 @@ image_proc_t get_lateral_position(vector<cv::Vec2f> &side_lines, float image_w, 
     // cout << "b_vl: " << b_vl << "\tb_vr: " << b_vr << endl;
 
     image_proc_t return_values{};
-    return_values.lateral_position = static_cast<int>(b_vr*cos(angle_right) + b_v - b_vl*cos(angle_left)/2);
     return_values.lateral_left = static_cast<int>(b_vl*cos(angle_left));
     return_values.lateral_right = static_cast<int>(b_vr*cos(angle_right));
 

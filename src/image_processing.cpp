@@ -156,18 +156,17 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
                 cout << "Something went wrong with bits" << endl;
         }
     }
-    int left_model = output.lateral_left;
-    int right_model = output.lateral_right;
+    left_model = output.lateral_left;
+    right_model = output.lateral_right;
 
 
-    output.lateral_position = static_cast<int> (0.2883 * lateral_model - 10.252);
     output.lateral_left = static_cast<int> (0.4432 * left_model - 24.4);
     output.lateral_right = static_cast<int> (-0.46 * right_model + 17.4);
 
     Logger::log_img_data(output);
-    cout<< output.status_code << " : " << output.lateral_left << " : " << output.lateral_right<< " : " << output.lateral_position << " : " <<
-                output.angle_left << " : " << output.angle_right << " : " <<
-                output.stop_distance << endl;
+    cout<< output.status_code << " : " << output.lateral_left << " : " << output.lateral_right << " : " 
+                              << output.angle_left << " : " << output.angle_right << " : "
+                              << output.stop_distance << endl;
     return output;
 }
 

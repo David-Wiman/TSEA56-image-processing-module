@@ -47,7 +47,8 @@ private:
 
     std::string path_root;
     bool const save_frames;
-    float lateral_model = 1000;
+    float left_model = 1000;
+    float right_model = 1000;
     float P = 10;
 
     int pre_left = 1000;
