@@ -97,7 +97,7 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
     frame2 = frame2 + mask;
 
     // Find lines and calculate angles and distances
-    output = image_process(frame2, save_frames);
+    output = image_process(frame2, (output.angle_left + output.angle_right)/2, save_frames);
     int angle_diff = output.angle_left - output.angle_right;
 
     if (save_frames) {

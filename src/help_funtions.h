@@ -42,7 +42,7 @@ float circle_line_dist(cv::Vec3f circle, cv::Vec2f line);
 image_proc_t get_lateral_position(std::vector<cv::Vec2f> &side_lines, float image_w, float image_h);
 int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float image_h);
 
-image_proc_t image_process(cv::Mat& imput_image, bool print_lines);
+image_proc_t image_process(cv::Mat& imput_image, int pre_angle, bool print_lines);
 
 
 #endif  // SRC_HELP_FUNTIONS_H_
