@@ -418,6 +418,10 @@ image_proc_t image_process(cv::Mat& image, int pre_angle, bool print_lines) {
             return_values.status_code = 1;
         }
         cout << "Dist between lines: " << lines_dist(side_lines[0], side_lines[1], image_width, image_height) << endl;
+        if (lines_dist(side_lines[0], side_lines[1], image_width, image_height) < 15
+            || lines_dist(side_lines[0], side_lines[1], image_width, image_height) > 80) {
+                return_values.status_code = 1;
+            }
     } else if (side_lines.size() == 1) {
         int angle = static_cast<int>(180*side_lines[0][1]/PI) % 180;
         if (angle > 90) {
