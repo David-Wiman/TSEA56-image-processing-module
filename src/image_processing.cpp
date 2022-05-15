@@ -86,7 +86,7 @@ image_proc_t ImageProcessing::get_next_image_data() {
 
 image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
     const int R_angles = 10;  // Measurement noise
-    const float Q_angles = 10;  // Process noise
+    const float Q_angles = 100;  // Process noise
     const int R_lat = 10;  // Measurement noise
     const float Q_lat = 10;  // Process noise
 
@@ -109,7 +109,7 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
     if (lat_l_model == 1000) {
         lat_l_model = static_cast<float> (output.lateral_left);
     }
-    if (lat_l_model == 1000) {
+    if (lat_r_model == 1000) {
         lat_r_model = static_cast<float> (output.lateral_right);
     }
     if (ang_l_model == 1000) {
@@ -122,44 +122,65 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
 
     int left_diff = output.angle_left - static_cast<int>(ang_l_model);
     int right_diff = output.angle_right - static_cast<int>(ang_r_model);
-    if ((left_diff / sqrt(P_ang_l + R_angles)) < 30) {
-        kalman(P_ang_l, ang_l_model, output.angle_left, R_angles);
-        P_ang_l = P_ang_l + Q_angles;
+    std::cout<< (left_diff / sqrt(P_ang_l + R_angles)) << std::endl;
+    std::cout<< (right_diff / sqrt(P_ang_r + R_angles)) << std::endl;
+    float L_left = 0;
+    float L_right = 0;
+    if (abs(left_diff / sqrt(P_ang_l + R_angles)) > 0.8) {
+        L_left = 1000;
+    }
+    kalman(P_ang_l, ang_l_model, output.angle_left, R_angles, L_left);
+    P_ang_l = P_ang_l + Q_angles;
 
-        kalman(P_lat_r, lat_l_model, output.lateral_right, R_lat);
-        P_lat_l = P_lat_l + Q_lat;
-        status +=1;
+    if (abs(right_diff / sqrt(P_ang_r + R_angles) ) >0.8) {
+        L_right = 1000;
     }
-    if ((right_diff / sqrt(P_ang_r + R_angles)) < 30) {
-        kalman(P_ang_r, lat_l_model, output.angle_right, R_angles);
-        P_ang_r = P_ang_r + Q_angles;
+    kalman(P_ang_r, ang_r_model, output.angle_right, R_angles, L_right);
+    P_ang_r = P_ang_r + Q_angles;
 
-        kalman(P_lat_r, P_lat_l, output.lateral_right, R_lat);
-        P_lat_r = P_lat_r + Q_lat;
-        status +=2;
-    }
-    switch (status) {
-    case 0:  // No correct
-        output.status_code = 2;
-        cout << "No angle" << endl;
-        break;
-    case 1:  // Left correct
-        output.angle_right = output.angle_left;
-        output.status_code = 1;
-        cout << "No detected right angle" << endl;
-        break;
-    case 2:  // Right correct
-        output.angle_left = output.angle_right;
-        output.status_code = 1;
-        cout << "No detected right angle" << endl;
-        break;
-    case 3:  // Both correct
-        output.status_code = 0;
-        break;
-    default:
-        cout << "Something wrong with switch case" << endl;
-        break;
-    }
+
+    kalman(P_lat_l, lat_l_model, output.lateral_left, R_lat, L_left);
+    P_lat_l = P_lat_l + Q_lat;
+
+    kalman(P_lat_r, lat_r_model, output.lateral_right, R_lat, L_right);
+    P_lat_r = P_lat_r + Q_lat;
+    // kalman(P_lat_r, lat_l_model, output.lateral_right, R_lat, L_right);
+    // P_lat_l = P_lat_l + Q_lat;
+        // status +=1;
+    // if (abs(right_diff / sqrt(P_ang_r + R_angles) ) < 0.8) {
+
+    //     kalman(P_ang_r, ang_r_model, output.angle_right, R_angles);
+    //     P_ang_r = P_ang_r + Q_angles;
+
+    //     kalman(P_lat_r, lat_r_model, output.lateral_right, R_lat);
+    //     P_lat_r = P_lat_r + Q_lat;
+    //     status +=2;
+    // }
+    // switch (status) {
+    // case 0:  // No correct
+    //     output.status_code = 1;
+    //     output.angle_left = lat_l_model;
+    //     output.angle_right = lat_r_model;
+
+    //     cout << "No angle" << endl;
+    //     break;
+    // case 1:  // Left correct
+    //     output.angle_right = lat_r_model;
+    //     output.status_code = 1;
+    //     cout << "No detected right angle" << endl;
+    //     break;
+    // case 2:  // Right correct
+    //     output.angle_left = lat_l_model;
+    //     output.status_code = 1;
+    //     cout << "No detected right angle" << endl;
+    //     break;
+    // case 3:  // Both correct
+    //     output.status_code = 0;
+    //     break;
+    // default:
+    //     cout << "Something wrong with switch case" << endl;
+    //     break;
+    // }
     // if (output.status_code == 0) {
     //     if (left_counter >= 5) {
     //         pre_left = output.angle_left;
@@ -205,9 +226,12 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
     //             cout << "Something went wrong with bits" << endl;
     //     }
     // }
-
-    output.lateral_left = static_cast<int> (-0.4432 * output.lateral_left + 24.4);
-    output.lateral_right = static_cast<int> (0.46 * output.lateral_right - 17.4);
+    output.lateral_left = static_cast<int> (-0.4432 * lat_l_model  + 24.4);
+    output.lateral_right = static_cast<int> (0.46 * lat_r_model - 17.4);
+    output.angle_left = ang_l_model;
+    output.angle_right = ang_r_model;
+    // output.lateral_left = static_cast<int> (-0.4432 * output.lateral_left + 24.4);
+    // output.lateral_right = static_cast<int> (0.46 * output.lateral_right - 17.4);
 
     Logger::log_img_data(output);
     cout<< output.status_code << " : " << output.lateral_left << " : " << output.lateral_right << " : " 

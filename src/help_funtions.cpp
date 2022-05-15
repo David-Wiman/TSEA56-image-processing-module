@@ -161,8 +161,8 @@ void classify_lines(vector<cv::Vec2f> &lines, vector<cv::Vec2f> &side_lines, vec
     return;
 }
 
-void kalman(float &P, float &x_model, int z, float R) {
-    float K = P / (P+R);
+void kalman(float &P, float &x_model, int z, float R, float L) {
+    float K = P / (P+R+L);
     x_model = x_model + K*(static_cast<float>(z)-x_model);
     P = (1-K)*P;
 }
@@ -417,7 +417,7 @@ image_proc_t image_process(cv::Mat& image, int pre_angle, bool print_lines) {
         } else {
             return_values.status_code = 1;
         }
-        cout << "Dist between lines: " << lines_dist(side_lines[0], side_lines[1], image_width, image_height) << endl;
+        // cout << "Dist between lines: " << lines_dist(side_lines[0], side_lines[1], image_width, image_height) << endl;
         if (lines_dist(side_lines[0], side_lines[1], image_width, image_height) < 15
             || lines_dist(side_lines[0], side_lines[1], image_width, image_height) > 80) {
                 return_values.status_code = 1;
