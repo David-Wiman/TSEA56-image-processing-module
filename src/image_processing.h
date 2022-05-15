@@ -48,11 +48,17 @@ private:
     std::string path_root;
     bool const save_frames;
     float lateral_model = 1000;
-    float left_model = 1000;
-    float right_model = 1000;
+    float ang_l_model = 1000;
+    float ang_r_model = 1000;
+    float lat_l_model = 1000;
+    float lat_r_model = 1000;
+
 
     float P_lat_l = 10;
     float P_lat_r = 10;
+    float P_ang_l = 10;
+    float P_ang_r = 10;
+
 
 
     int pre_left = 1000;
