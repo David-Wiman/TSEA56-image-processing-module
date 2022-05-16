@@ -91,17 +91,24 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
     image_proc_t output{};
     // Get next frame
 
-
+    if (save_frames) {
+        cv::imwrite("original.jpg", frame2);
+    }
     cv::remap(frame, frame2, mapx, mapy, cv::INTER_LINEAR);
+    if (save_frames) {
+        cv::imwrite("after_transform.jpg", frame2);
+    }
     // Remove inaccurate pixels in botton corners from fisheye+ipm with a mask
     frame2 = frame2 + mask;
-
+    if (save_frames) {
+        cv::imwrite("with_mask.jpg", frame2);
+    }
     // Find lines and calculate angles and distances
     output = image_process(frame2, save_frames);
     int angle_diff = output.angle_left - output.angle_right;
 
     if (save_frames) {
-        cv::imwrite("out.jpg", frame2);
+        cv::imwrite("with_lines.jpg", frame2);
     }
     if (lateral_model == 1000) {
         lateral_model = static_cast<float> (output.lateral_position);
