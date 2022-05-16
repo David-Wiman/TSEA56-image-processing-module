@@ -113,12 +113,11 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
         lat_r_model = static_cast<float> (output.lateral_right);
     }
     if (ang_l_model == 1000) {
-        ang_l_model = output.angle_left;
+        ang_l_model = static_cast<float>(output.angle_left);
     }
     if (ang_r_model == 1000) {
-        ang_r_model = output.angle_right;
+        ang_r_model = static_cast<float>(output.angle_right);
     }
-    int status = 0;
 
     int left_diff = output.angle_left - static_cast<int>(ang_l_model);
     int right_diff = output.angle_right - static_cast<int>(ang_r_model);
@@ -228,8 +227,8 @@ image_proc_t ImageProcessing::process_next_frame(cv::Mat &frame) {
     // }
     output.lateral_left = static_cast<int> (-0.4432 * lat_l_model  + 24.4);
     output.lateral_right = static_cast<int> (0.46 * lat_r_model - 17.4);
-    output.angle_left = ang_l_model;
-    output.angle_right = ang_r_model;
+    output.angle_left = static_cast<int> (ang_l_model);
+    output.angle_right = static_cast<int> (ang_r_model);
     // output.lateral_left = static_cast<int> (-0.4432 * output.lateral_left + 24.4);
     // output.lateral_right = static_cast<int> (0.46 * output.lateral_right - 17.4);
 

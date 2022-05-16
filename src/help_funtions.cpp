@@ -375,7 +375,7 @@ int get_stop_line_distance(cv::Vec2f const &stop_line, float image_w, float imag
 
 image_proc_t image_process(cv::Mat& image, int pre_angle, bool print_lines) {
     cv::Mat edges, gray;
-    vector<cv::Vec2f> lines, side_lines, stop_lines, lines_1, lines_2;
+    vector<cv::Vec2f> lines, side_lines, stop_lines, lines_1, lines_2, side_lines2;
     vector<cv::Vec3f> circles;
 
     image_proc_t return_values{};
@@ -391,8 +391,11 @@ image_proc_t image_process(cv::Mat& image, int pre_angle, bool print_lines) {
     classify_lines(lines, side_lines, stop_lines, pre_angle);
 
     if (side_lines.size() >= 2) {
-        // print_lines_on_image(side_lines, image, cv::Scalar(255, 255, 0));
         sort(side_lines.begin(), side_lines.end(), comp_theta);
+        if (!lines_parallell(side_lines[0], side_lines[1])) {
+            side_lines2.push_back(side_lines[0]);
+        }
+        // print_lines_on_image(side_lines, image, cv::Scalar(255, 255, 0));
 
         lines_1.push_back(side_lines[0]);
         for (unsigned int i=1; i<side_lines.size(); i++) {
